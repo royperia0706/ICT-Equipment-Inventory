@@ -16,7 +16,7 @@ import {
   storageLabel,
   storageUnits,
 } from "@/lib/computer-fields";
-import { locationChoices, provinceOrder } from "@/lib/location-choices";
+import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 const LOCAL_KEY = "ict-computers";
 const SEQ_KEY = "ict-computer-sequences";
@@ -90,9 +90,10 @@ function Field({ label, required, children }) {
 function Select({ name, value, onChange, options }) {
   return (
     <select name={name} value={value} onChange={onChange}>
-      {options.map((option) => (
-        <option key={option} value={option}>{option}</option>
-      ))}
+      {options.map((option) => {
+        const item = typeof option === "string" ? { value: option, label: option } : option;
+        return <option key={item.value} value={item.value}>{item.label}</option>;
+      })}
     </select>
   );
 }
@@ -111,22 +112,23 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
   }, [initial]);
 
   const provinceOptions = useMemo(() => {
-    const present = new Set(locations.map((row) => row.province));
-    return provinceOrder.filter((name) => present.has(name));
+    const region = regionsIn(locations)[0];
+    return officesIn(locations, region).map((unit) => officeLabel(unit));
   }, [locations]);
 
-  const placeOptions = useMemo(
-    () => locationChoices(locations, form.province),
-    [locations, form.province]
-  );
+  const stationOptions = useMemo(() => {
+    const unit = officesIn(locations, regionsIn(locations)[0]).find((item) => officeLabel(item) === form.province);
+    return stationsIn(locations, unit);
+  }, [locations, form.province]);
 
   useEffect(() => {
     if (!provinceOptions.length) return;
     setForm((current) => {
       const province = provinceOptions.includes(current.province) ? current.province : provinceOptions[0];
-      const choices = locationChoices(locations, province);
-      const municipality = choices.stations.includes(current.municipality) ? current.municipality : choices.stations[0] || "";
-      const office = choices.offices.includes(current.office) ? current.office : choices.offices[0] || "";
+      const unit = officesIn(locations, regionsIn(locations)[0]).find((item) => officeLabel(item) === province);
+      const stations = stationsIn(locations, unit);
+      const municipality = stations.some((row) => row.name === current.municipality) ? current.municipality : stations[0]?.name || "";
+      const office = unit || "";
       if (province === current.province && municipality === current.municipality && office === current.office) return current;
       return { ...current, province, municipality, office };
     });
@@ -154,6 +156,17 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
 
   function update(event) {
     const { name, value } = event.target;
+    if (name === "province") {
+      const unit = officesIn(locations, regionsIn(locations)[0]).find((item) => officeLabel(item) === value);
+      const stations = stationsIn(locations, unit);
+      setForm((current) => ({
+        ...current,
+        province: value,
+        office: unit || "",
+        municipality: stations[0]?.name || "",
+      }));
+      return;
+    }
     setForm((current) => ({ ...current, [name]: value }));
   }
 
@@ -348,14 +361,19 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
           <section className="panel-card">
             <h2>Location and accountability</h2>
             <div className="form-grid">
-              <Field label="Province" required>
+              <Field label="Region" required>
+                <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
+              </Field>
+              <Field label="Office" required>
                 <Select name="province" value={form.province} onChange={update} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
               <Field label="Station" required>
-                <Select name="municipality" value={form.municipality} onChange={update} options={placeOptions.stations.length ? placeOptions.stations : [form.municipality]} />
-              </Field>
-              <Field label="Office" required>
-                <Select name="office" value={form.office} onChange={update} options={placeOptions.offices.length ? placeOptions.offices : [form.office]} />
+                <Select
+                  name="municipality"
+                  value={form.municipality}
+                  onChange={update}
+                  options={stationOptions.length ? stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` })) : [form.municipality]}
+                />
               </Field>
               <Field label="Section">
                 <Select name="section" value={form.section} onChange={update} options={sections} />

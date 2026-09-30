@@ -35,7 +35,8 @@ for (const row of rows) {
     continue;
   }
   if (!unit) continue;
-  records.push({
+    records.push({
+    region: "PRO 4A - CALABARZON",
     province: provinceName(unit),
     unit,
     name,

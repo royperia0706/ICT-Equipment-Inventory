@@ -1,24 +1,36 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { officeOrder } from "@/lib/location-choices";
+import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 export default function OfficeStationFilters({ locations = [] }) {
-  const offices = useMemo(() => {
-    const present = new Set(locations.map((row) => row.unit));
-    return officeOrder.filter((unit) => present.has(unit));
-  }, [locations]);
+  const regions = useMemo(() => regionsIn(locations), [locations]);
+  const [region, setRegion] = useState(regions[0] || "");
+  const offices = useMemo(() => officesIn(locations, region), [locations, region]);
   const [office, setOffice] = useState(offices[0] || "");
   const [stationId, setStationId] = useState("");
-
-  const stations = useMemo(
-    () => locations.filter((row) => row.unit === office),
-    [locations, office]
-  );
+  const stations = useMemo(() => stationsIn(locations, office), [locations, office]);
   const selected = stations.find((row) => `${row.unit}-${row.name}` === stationId) || null;
 
   return (
     <section className="panel-card dash-filters">
+      <label>
+        Region
+        <select
+          value={region}
+          onChange={(event) => {
+            const nextRegion = event.target.value;
+            const nextOffices = officesIn(locations, nextRegion);
+            setRegion(nextRegion);
+            setOffice(nextOffices[0] || "");
+            setStationId("");
+          }}
+        >
+          {regions.map((name) => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+      </label>
       <label>
         Office
         <select
@@ -29,7 +41,7 @@ export default function OfficeStationFilters({ locations = [] }) {
           }}
         >
           {offices.map((unit) => (
-            <option key={unit} value={unit}>{unit}</option>
+            <option key={unit} value={unit}>{officeLabel(unit)}</option>
           ))}
         </select>
       </label>
@@ -46,8 +58,8 @@ export default function OfficeStationFilters({ locations = [] }) {
       </label>
       <p className="filter-note">
         {selected
-          ? `${selected.name} · classification ${selected.classification}`
-          : `${stations.length} stations in ${office || "this office"}`}
+          ? `${officeLabel(office)} · ${selected.name} · ${selected.classification}`
+          : `${stations.length} stations under ${officeLabel(office) || "this office"}`}
       </p>
     </section>
   );
