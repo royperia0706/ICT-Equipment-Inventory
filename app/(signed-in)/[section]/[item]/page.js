@@ -8,7 +8,7 @@ import { moduleFor } from "@/lib/navigation";
 export default async function ItemPage({ params }) {
   const { section, item } = await params;
   if (section === "inventory" && item === "computer") {
-    return <ComputerInventory initial={listComputers()} />;
+    return <ComputerInventory initial={await listComputers()} />;
   }
   const page = moduleFor(section, item);
   if (!page) notFound();
