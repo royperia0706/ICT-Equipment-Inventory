@@ -18,19 +18,19 @@ const emptyForm = {
   model: "",
   serialNumber: "",
   assetTag: "",
-  connectionType: "USB",
+  connectionType: "",
   ipAddress: "",
   tonerInkType: "",
-  colorCapability: "Monochrome / Black & White",
+  colorCapability: "",
   province: "",
   municipality: "",
   office: "",
-  section: "Others",
+  section: "",
   accountablePerson: "",
   assignedUser: "",
-  status: "Serviceable",
-  condition: "Good",
-  modeOfAcquisition: "Purchased",
+  status: "",
+  condition: "",
+  modeOfAcquisition: "",
   dateAcquired: "",
   acquisitionCost: "",
   remarks: "",
@@ -45,10 +45,11 @@ function Field({ label, required, children }) {
   );
 }
 
-function Select({ name, value, onChange, options, disabled }) {
+function Select({ name, value, onChange, options, disabled, required, blank = true }) {
   return (
-    <select name={name} value={value} onChange={onChange} disabled={disabled}>
-      {options.map((option) => {
+    <select name={name} value={value} onChange={onChange} disabled={disabled} required={required}>
+      {blank ? <option value="">--Select--</option> : null}
+      {options.filter(Boolean).map((option) => {
         const item = typeof option === "string" ? { value: option, label: option } : option;
         return <option key={item.value} value={item.value}>{item.label}</option>;
       })}
@@ -76,18 +77,17 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
   }, [locations, form.province]);
 
   useEffect(() => {
-    if (!provinceOptions.length) return;
+    if (mode !== "add" || editingId || !locations.length) return;
+    const region = regionsIn(locations)[0];
+    const unit = officesIn(locations, region)[0] || "";
+    const stations = stationsIn(locations, unit);
+    const province = officeLabel(unit);
+    const municipality = stations.length === 1 ? stations[0].name : "";
     setForm((current) => {
-      if (editingId) return current;
-      const province = provinceOptions.includes(current.province) ? current.province : provinceOptions[0];
-      const unit = officesIn(locations, regionsIn(locations)[0]).find((item) => officeLabel(item) === province);
-      const stations = stationsIn(locations, unit);
-      const municipality = stations.some((row) => row.name === current.municipality) ? current.municipality : stations[0]?.name || "";
-      const office = unit || "";
-      if (province === current.province && municipality === current.municipality && office === current.office) return current;
-      return { ...current, province, municipality, office };
+      if (current.province === province && current.office === unit && current.municipality === municipality) return current;
+      return { ...current, province, office: unit, municipality };
     });
-  }, [locations, provinceOptions, editingId]);
+  }, [mode, editingId, locations]);
 
   useEffect(() => {
     if (mode !== "add") return;
@@ -242,7 +242,7 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
                 <input name="assetTag" value={form.assetTag} onChange={update} placeholder="Hal. PRT-001" />
               </Field>
               <Field label="Connection Type" required>
-                <Select name="connectionType" value={form.connectionType} onChange={update} options={connectionTypes} />
+                <Select name="connectionType" value={form.connectionType} onChange={update} options={connectionTypes} required />
               </Field>
               <Field label="IP Address">
                 <input name="ipAddress" value={form.ipAddress} onChange={update} placeholder="Hal. 192.168.1.50" />
@@ -257,7 +257,7 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
                 <input name="tonerInkType" value={form.tonerInkType} onChange={update} required placeholder="Hal. CF226A / 051" />
               </Field>
               <Field label="Color Capability" required>
-                <Select name="colorCapability" value={form.colorCapability} onChange={update} options={colorCapabilities} />
+                <Select name="colorCapability" value={form.colorCapability} onChange={update} options={colorCapabilities} required />
               </Field>
             </div>
           </section>
@@ -269,15 +269,17 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
                 <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
               </Field>
               <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled={provinceOptions.length <= 1} options={provinceOptions.length ? provinceOptions : [form.province || "Office"]} />
+                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
               <Field label="Station" required>
                 <Select
                   name="municipality"
                   value={form.municipality}
                   onChange={update}
+                  required
+                  blank={stationOptions.length !== 1}
                   disabled={stationOptions.length <= 1}
-                  options={stationOptions.length ? stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` })) : [form.municipality || "Station"]}
+                  options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
                 />
               </Field>
               <Field label="Section">
@@ -296,10 +298,10 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
             <h2>Status and condition</h2>
             <div className="form-grid">
               <Field label="Status" required>
-                <Select name="status" value={form.status} onChange={update} options={printerStatuses} />
+                <Select name="status" value={form.status} onChange={update} options={printerStatuses} required />
               </Field>
               <Field label="Condition" required>
-                <Select name="condition" value={form.condition} onChange={update} options={printerConditions} />
+                <Select name="condition" value={form.condition} onChange={update} options={printerConditions} required />
               </Field>
             </div>
           </section>
@@ -308,7 +310,7 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
             <h2>Acquisition and warranty</h2>
             <div className="form-grid">
               <Field label="Mode of Acquisition" required>
-                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={printerAcquisitions} />
+                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={printerAcquisitions} required />
               </Field>
               <Field label="Date Acquired" required>
                 <input name="dateAcquired" type="date" value={form.dateAcquired} onChange={update} required />

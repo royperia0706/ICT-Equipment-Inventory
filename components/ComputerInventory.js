@@ -11,6 +11,7 @@ import {
   dedicatedUses,
   equipmentTypes,
   formatControl,
+  ramSizes,
   sections,
   statuses,
   storageUnits,
@@ -18,11 +19,11 @@ import {
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 const emptyForm = {
-  equipmentType: "Laptop",
+  equipmentType: "",
   computerName: "",
   systemModel: "",
   display: "",
-  connectivity: "LAN and WiFi",
+  connectivity: "",
   brand: "",
   model: "",
   serialNumber: "",
@@ -32,20 +33,20 @@ const emptyForm = {
   ssdValue: "",
   ssdUnit: "GB",
   hddValue: "",
-  hddUnit: "TB",
+  hddUnit: "GB",
   gpu: "",
   os: "",
-  province: "Laguna",
-  municipality: "Calamba",
-  office: "Calamba CPS",
-  section: "Others",
+  province: "",
+  municipality: "",
+  office: "",
+  section: "",
   specificEndUser: "",
   accountablePerson: "",
-  assignmentStatus: "Assigned",
-  status: "Serviceable",
-  condition: "Good",
-  modeOfAcquisition: "Un-documented",
-  dedicatedUse: "None",
+  assignmentStatus: "",
+  status: "",
+  condition: "",
+  modeOfAcquisition: "",
+  dedicatedUse: "",
   dedicatedUseOthers: "",
   dateAcquired: "",
   acquisitionCost: "",
@@ -60,7 +61,7 @@ function splitStorage(label, fallback) {
 
 function formFromRow(row) {
   const ssd = splitStorage(row.ssdStorage, "GB");
-  const hdd = splitStorage(row.hddStorage, "TB");
+  const hdd = splitStorage(row.hddStorage, "GB");
   const known = dedicatedUses.includes(row.dedicatedUse);
   return {
     ...emptyForm,
@@ -108,10 +109,11 @@ function Field({ label, required, children }) {
   );
 }
 
-function Select({ name, value, onChange, options, disabled }) {
+function Select({ name, value, onChange, options, disabled, required, blank = true }) {
   return (
-    <select name={name} value={value} onChange={onChange} disabled={disabled}>
-      {options.map((option) => {
+    <select name={name} value={value} onChange={onChange} disabled={disabled} required={required}>
+      {blank ? <option value="">--Select--</option> : null}
+      {options.filter(Boolean).map((option) => {
         const item = typeof option === "string" ? { value: option, label: option } : option;
         return <option key={item.value} value={item.value}>{item.label}</option>;
       })}
@@ -139,18 +141,17 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
   }, [locations, form.province]);
 
   useEffect(() => {
-    if (!provinceOptions.length) return;
+    if (mode !== "add" || editingId || !locations.length) return;
+    const region = regionsIn(locations)[0];
+    const unit = officesIn(locations, region)[0] || "";
+    const stations = stationsIn(locations, unit);
+    const province = officeLabel(unit);
+    const municipality = stations.length === 1 ? stations[0].name : "";
     setForm((current) => {
-      if (editingId) return current;
-      const province = provinceOptions.includes(current.province) ? current.province : provinceOptions[0];
-      const unit = officesIn(locations, regionsIn(locations)[0]).find((item) => officeLabel(item) === province);
-      const stations = stationsIn(locations, unit);
-      const municipality = stations.some((row) => row.name === current.municipality) ? current.municipality : stations[0]?.name || "";
-      const office = unit || "";
-      if (province === current.province && municipality === current.municipality && office === current.office) return current;
-      return { ...current, province, municipality, office };
+      if (current.province === province && current.office === unit && current.municipality === municipality) return current;
+      return { ...current, province, office: unit, municipality };
     });
-  }, [locations, provinceOptions, editingId]);
+  }, [mode, editingId, locations]);
 
   useEffect(() => {
     if (mode !== "add") return;
@@ -291,7 +292,7 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
                 <input value={controlNumber} disabled />
               </Field>
               <Field label="Equipment Type" required>
-                <Select name="equipmentType" value={form.equipmentType} onChange={update} options={equipmentTypes} />
+                <Select name="equipmentType" value={form.equipmentType} onChange={update} options={equipmentTypes} required />
               </Field>
               <Field label="Computer Name">
                 <input name="computerName" value={form.computerName} onChange={update} placeholder="hal. NPCS-UNIT-001" />
@@ -327,18 +328,18 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
                 <input name="processor" value={form.processor} onChange={update} placeholder="hal. Intel Core i5-1240P" />
               </Field>
               <Field label="RAM (GB)">
-                <input name="ram" type="number" min="1" value={form.ram} onChange={update} placeholder="hal. 16" />
+                <Select name="ram" value={form.ram} onChange={update} options={ramSizes.includes(form.ram) || !form.ram ? ramSizes : [form.ram, ...ramSizes]} />
               </Field>
               <Field label="SSD Storage">
                 <span className="storage-row">
                   <input name="ssdValue" type="number" min="0" value={form.ssdValue} onChange={update} placeholder="hal. 512" />
-                  <Select name="ssdUnit" value={form.ssdUnit} onChange={update} options={storageUnits} />
+                  <Select name="ssdUnit" value={form.ssdUnit} onChange={update} options={storageUnits} blank={false} />
                 </span>
               </Field>
               <Field label="HDD Storage">
                 <span className="storage-row">
                   <input name="hddValue" type="number" min="0" value={form.hddValue} onChange={update} placeholder="hal. 1" />
-                  <Select name="hddUnit" value={form.hddUnit} onChange={update} options={storageUnits} />
+                  <Select name="hddUnit" value={form.hddUnit} onChange={update} options={storageUnits} blank={false} />
                 </span>
               </Field>
               <Field label="GPU">
@@ -357,14 +358,16 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
                 <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
               </Field>
               <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled={provinceOptions.length <= 1} options={provinceOptions.length ? provinceOptions : [form.province]} />
+                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
               <Field label="Station" required>
                 <Select
                   name="municipality"
                   value={form.municipality}
                   onChange={update}
-                  options={stationOptions.length ? stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` })) : [form.municipality]}
+                  required
+                  blank={stationOptions.length !== 1}
+                  options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
                   disabled={stationOptions.length <= 1}
                 />
               </Field>
@@ -378,7 +381,7 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
                 <input name="accountablePerson" value={form.accountablePerson} onChange={update} placeholder="Pangalan ng taong may pananagutan" />
               </Field>
               <Field label="Assignment Status" required>
-                <Select name="assignmentStatus" value={form.assignmentStatus} onChange={update} options={assignmentStatuses} />
+                <Select name="assignmentStatus" value={form.assignmentStatus} onChange={update} options={assignmentStatuses} required />
               </Field>
             </div>
           </section>
@@ -387,10 +390,10 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
             <h2>Status and condition</h2>
             <div className="form-grid">
               <Field label="Status" required>
-                <Select name="status" value={form.status} onChange={update} options={statuses} />
+                <Select name="status" value={form.status} onChange={update} options={statuses} required />
               </Field>
               <Field label="Condition" required>
-                <Select name="condition" value={form.condition} onChange={update} options={conditions} />
+                <Select name="condition" value={form.condition} onChange={update} options={conditions} required />
               </Field>
             </div>
           </section>
@@ -399,7 +402,7 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
             <h2>Acquisition and warranty</h2>
             <div className="form-grid">
               <Field label="Mode of Acquisition" required>
-                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={acquisitions} />
+                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={acquisitions} required />
               </Field>
               <Field label="Dedicated Use For">
                 <Select name="dedicatedUse" value={form.dedicatedUse} onChange={update} options={dedicatedUses} />
