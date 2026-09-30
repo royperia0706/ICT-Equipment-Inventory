@@ -17,6 +17,7 @@ import {
   storageUnits,
 } from "@/lib/computer-fields";
 import { agingLabel, columnsWithAging } from "@/lib/aging";
+import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 const emptyForm = {
   equipmentType: "",
