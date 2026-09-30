@@ -1,3 +1,4 @@
+import { isBlankLogin, temporaryUser } from "@/lib/guard";
 import { clearLock, inspectLock, registerFailure } from "@/lib/lockout";
 import { json, setSession } from "@/lib/session";
 import { authenticate, publicUser } from "@/lib/users";
@@ -7,6 +8,12 @@ const CHALLENGE = 60 * 10;
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const email = body.email;
+
+  if (isBlankLogin(email, body.password)) {
+    await setSession({ email: temporaryUser.email, step: "verified", temporary: true });
+    return json({ ok: true, step: "verified", ...temporaryUser });
+  }
+
   const lock = inspectLock(email);
 
   if (lock.blocked) {

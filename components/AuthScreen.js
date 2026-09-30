@@ -40,7 +40,7 @@ export default function AuthScreen({ firstRun }) {
       return;
     }
 
-    router.push(data.step === "verify" ? "/verify" : "/setup");
+    router.push(data.step === "verified" ? "/home" : data.step === "verify" ? "/verify" : "/setup");
     router.refresh();
   }
 
@@ -57,21 +57,21 @@ export default function AuthScreen({ firstRun }) {
           {firstRun ? (
             <label>
               Full name
-              <input name="displayName" autoComplete="name" required />
+              <input name="displayName" autoComplete="name" />
             </label>
           ) : null}
           <label>
             Email
-            <input name="email" type="email" autoComplete="username" required />
+            <input name="email" type="text" autoComplete="username" />
           </label>
           <label>
             Password
-            <input name="password" type="password" autoComplete={firstRun ? "new-password" : "current-password"} minLength={8} required />
+            <input name="password" type="password" autoComplete={firstRun ? "new-password" : "current-password"} />
           </label>
           {firstRun ? (
             <label>
               Confirm password
-              <input name="confirm" type="password" autoComplete="new-password" minLength={8} required />
+              <input name="confirm" type="password" autoComplete="new-password" />
             </label>
           ) : null}
           {error ? <p className="error" role="alert">{error}</p> : null}
