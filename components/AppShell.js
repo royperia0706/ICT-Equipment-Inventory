@@ -18,9 +18,7 @@ export default function AppShell({ user, children }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [groups, setGroups] = useState({
-    PRO4A: true,
     Inventory: true,
-    Accountability: true,
   });
 
   useEffect(() => {
@@ -111,7 +109,7 @@ export default function AppShell({ user, children }) {
         </nav>
         <SignOutButton className="side-link side-logout">
           <Icon name="logout" />
-          <span>Logout</span>
+          <span>Log-out</span>
         </SignOutButton>
       </aside>
 

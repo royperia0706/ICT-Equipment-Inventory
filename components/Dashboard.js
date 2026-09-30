@@ -1,4 +1,5 @@
 import Link from "next/link";
+import OfficeStationFilters from "@/components/OfficeStationFilters";
 import { activities, attention, provinces, totals } from "@/lib/dashboard";
 
 function number(value) {
@@ -64,7 +65,7 @@ function Pie({ rows, label }) {
   );
 }
 
-export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview" }) {
+export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [] }) {
   const statusRows = totals.filter((item) => item.label !== "Total equipment");
 
   return (
@@ -73,6 +74,8 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
         <p className="kicker">{kicker}</p>
         <h1>{title}</h1>
       </header>
+
+      <OfficeStationFilters locations={locations} />
 
       <section className="stat-grid" aria-label="Equipment totals">
         {totals.map((item) => (
