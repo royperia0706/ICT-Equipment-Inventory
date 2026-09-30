@@ -17,6 +17,7 @@ export default function AppShell({ user, children }) {
   const [navOpen, setNavOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const menu = navigation.filter((item) => item.href !== "/accounts" || user?.role !== "encoder");
   const [groups, setGroups] = useState({
     Inventory: true,
   });
@@ -47,7 +48,7 @@ export default function AppShell({ user, children }) {
           <strong>Equipment Inventory</strong>
         </div>
         <nav className="side-nav" aria-label="Main">
-          {navigation.map((item) =>
+          {menu.map((item) =>
             item.children ? (
               <div key={item.label} className="side-group">
                 <div className={groups[item.label] ? "side-group-btn open" : "side-group-btn"}>

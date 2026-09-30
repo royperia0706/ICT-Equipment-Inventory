@@ -31,7 +31,7 @@ function canManage(user) {
 function canChange(user, account) {
   if (!canManage(user) || !account) return false;
   if (account.role === "super-admin" && user.role !== "super-admin") return false;
-  if (user.role === "assistant-admin" && account.unit !== user.unit) return false;
+  if (user.role === "assistant-admin" && (account.unit !== user.unit || account.role !== "encoder")) return false;
   return true;
 }
 
@@ -54,6 +54,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
     return list;
   }, [locations, form.unit, form.station, form.classification]);
   const officeChoices = form.unit && !offices.includes(form.unit) ? [form.unit, ...offices] : offices;
+  const choices = user?.role === "assistant-admin" ? ["Encoder"] : accessOptions;
 
   function update(event) {
     const { name, value } = event.target;
@@ -293,7 +294,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
               <Field label="Access" required>
                 <select name="access" value={form.access} onChange={update} required>
                   <option value="">--Select--</option>
-                  {accessOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  {choices.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
               </Field>
             </div>
