@@ -7,7 +7,7 @@ import {
   computerColumns,
   conditions,
   connectivityOptions,
-  controlPrefix,
+  computerSeries,
   dedicatedUses,
   equipmentTypes,
   formatControl,
@@ -154,8 +154,7 @@ export default function ComputerInventory({ initial = [], locations = [] }) {
 
   useEffect(() => {
     if (mode !== "add") return;
-    const prefix = controlPrefix(form.municipality, form.office);
-    setControlNumber(formatControl(prefix, 1));
+    setControlNumber(formatControl(computerSeries, 1));
     const params = new URLSearchParams({
       preview: "1",
       municipality: form.municipality,
