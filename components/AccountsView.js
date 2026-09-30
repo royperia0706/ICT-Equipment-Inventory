@@ -7,7 +7,7 @@ export default function AccountsView({ accounts = [] }) {
       </header>
       <section className="panel-card">
         {accounts.length === 0 ? (
-          <p className="hint">No accounts are assigned to this office.</p>
+          <p className="hint">No accounts are loaded yet.</p>
         ) : (
           <div className="computer-table-wrap">
             <table className="computer-table">

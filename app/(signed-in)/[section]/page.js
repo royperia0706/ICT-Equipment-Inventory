@@ -8,8 +8,8 @@ import { listAccounts } from "@/lib/users";
 export default async function SectionPage({ params }) {
   const { section } = await params;
   if (section === "accounts") {
-    const user = await requireUser();
-    const accounts = await listAccounts(user);
+    await requireUser();
+    const accounts = await listAccounts();
     return <AccountsView accounts={accounts} />;
   }
   const page = moduleFor(section);

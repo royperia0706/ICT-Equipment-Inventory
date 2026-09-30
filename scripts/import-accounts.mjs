@@ -32,26 +32,47 @@ let unit = "";
 const records = [];
 for (const row of rows) {
   const name = String(row[0] || "").trim();
-  const classification = String(row[1] || "").trim();
-  const username = String(row[2] || "").trim().toLowerCase();
-  const password = String(row[3] || "").trim();
-  const access = String(row[4] || "").trim();
-  if (!username && name && !classification) {
+  const second = String(row[1] || "").trim();
+  const third = String(row[2] || "").trim();
+  const fourth = String(row[3] || "").trim();
+  const fifth = String(row[4] || "").trim();
+  if (!name || name === "PRO 4A - CALABARZON" || /^NAME OF /i.test(name)) continue;
+
+  if (/assistant/i.test(fourth) && second && third && !fifth) {
+    records.push({
+      region: "PRO 4A - CALABARZON",
+      unit: name,
+      province: provinceName(name),
+      station: name,
+      displayName: name,
+      classification: "Office",
+      username: second.toLowerCase(),
+      password: third,
+      access: fourth,
+      role: roleFor(fourth),
+      sort: records.length,
+    });
+    continue;
+  }
+
+  if (!second && !third) {
     unit = name;
     continue;
   }
-  if (!username || username === "username" || !password || !unit) continue;
+
+  const username = third.toLowerCase();
+  if (!username || username === "username" || !fourth || !unit) continue;
   records.push({
     region: "PRO 4A - CALABARZON",
     unit,
     province: provinceName(unit),
     station: name,
     displayName: name,
-    classification,
+    classification: second,
     username,
-    password,
-    access: access || "Encoder",
-    role: roleFor(access),
+    password: fourth,
+    access: fifth || "Encoder",
+    role: roleFor(fifth),
     sort: records.length,
   });
 }
@@ -70,7 +91,12 @@ for (const record of records) {
   record.username = next;
 }
 
+const existing = await db.collection("accounts").get();
+const nextIds = new Set(records.map((record) => record.username.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")));
 const batch = db.batch();
+for (const doc of existing.docs) {
+  if (!nextIds.has(doc.id)) batch.delete(doc.ref);
+}
 for (const record of records) {
   const id = record.username.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   batch.set(db.collection("accounts").doc(id), {
