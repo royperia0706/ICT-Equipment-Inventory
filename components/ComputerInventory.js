@@ -11,14 +11,12 @@ import {
   dedicatedUses,
   equipmentTypes,
   formatControl,
-  municipalities,
-  offices,
-  provinces,
   sections,
   statuses,
   storageLabel,
   storageUnits,
 } from "@/lib/computer-fields";
+import { locationChoices, provinceOrder } from "@/lib/location-choices";
 
 const LOCAL_KEY = "ict-computers";
 const SEQ_KEY = "ict-computer-sequences";
@@ -99,7 +97,7 @@ function Select({ name, value, onChange, options }) {
   );
 }
 
-export default function ComputerInventory({ initial = [] }) {
+export default function ComputerInventory({ initial = [], locations = [] }) {
   const [rows, setRows] = useState(initial);
   const [mode, setMode] = useState("list");
   const [form, setForm] = useState(emptyForm);
@@ -111,6 +109,28 @@ export default function ComputerInventory({ initial = [] }) {
     if (initial.length) return;
     setRows(readLocal());
   }, [initial]);
+
+  const provinceOptions = useMemo(() => {
+    const present = new Set(locations.map((row) => row.province));
+    return provinceOrder.filter((name) => present.has(name));
+  }, [locations]);
+
+  const placeOptions = useMemo(
+    () => locationChoices(locations, form.province),
+    [locations, form.province]
+  );
+
+  useEffect(() => {
+    if (!provinceOptions.length) return;
+    setForm((current) => {
+      const province = provinceOptions.includes(current.province) ? current.province : provinceOptions[0];
+      const choices = locationChoices(locations, province);
+      const municipality = choices.stations.includes(current.municipality) ? current.municipality : choices.stations[0] || "";
+      const office = choices.offices.includes(current.office) ? current.office : choices.offices[0] || "";
+      if (province === current.province && municipality === current.municipality && office === current.office) return current;
+      return { ...current, province, municipality, office };
+    });
+  }, [locations, provinceOptions]);
 
   useEffect(() => {
     if (mode !== "add") return;
@@ -329,13 +349,13 @@ export default function ComputerInventory({ initial = [] }) {
             <h2>Location and accountability</h2>
             <div className="form-grid">
               <Field label="Province" required>
-                <Select name="province" value={form.province} onChange={update} options={provinces} />
+                <Select name="province" value={form.province} onChange={update} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
-              <Field label="Municipality" required>
-                <Select name="municipality" value={form.municipality} onChange={update} options={municipalities} />
+              <Field label="Station" required>
+                <Select name="municipality" value={form.municipality} onChange={update} options={placeOptions.stations.length ? placeOptions.stations : [form.municipality]} />
               </Field>
               <Field label="Office" required>
-                <Select name="office" value={form.office} onChange={update} options={offices} />
+                <Select name="office" value={form.office} onChange={update} options={placeOptions.offices.length ? placeOptions.offices : [form.office]} />
               </Field>
               <Field label="Section">
                 <Select name="section" value={form.section} onChange={update} options={sections} />
