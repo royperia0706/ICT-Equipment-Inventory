@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { agingLabel, columnsWithAging } from "@/lib/aging";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 import {
   colorCapabilities,
@@ -57,13 +58,14 @@ function Select({ name, value, onChange, options, disabled, required, blank = tr
   );
 }
 
-export default function PrinterInventory({ initial = [], locations = [] }) {
+export default function PrinterInventory({ initial = [], locations = [], user = null }) {
   const [rows, setRows] = useState(initial);
   const [mode, setMode] = useState("list");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [controlNumber, setControlNumber] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   const provinceOptions = useMemo(() => {
@@ -104,6 +106,21 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
       .catch(() => {});
   }, [mode, form.municipality, form.office]);
 
+  const columns = useMemo(() => columnsWithAging(printerColumns), []);
+
+  function canDecide(row) {
+    if (!user || !row?.pendingAction) return false;
+    if (user.role === "super-admin") return true;
+    if (row.pendingAction === "ber") return false;
+    return user.role === "assistant-admin";
+  }
+
+  function needsApproval() {
+    const ber = /^(for\s*ber|ber)$/i.test(form.status) || /^(for\s*ber|ber)$/i.test(form.condition);
+    if (ber && user?.role !== "super-admin") return true;
+    return Boolean(editingId) && user?.role === "encoder";
+  }
+
   function update(event) {
     const { name, value } = event.target;
     if (name === "province") {
@@ -128,7 +145,8 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
   }
 
   function editRow(row) {
-    setForm({ ...emptyForm, ...row, acquisitionCost: row.acquisitionCost || "" });
+    const { pendingAction, pendingStatus, pendingBy, previousStatus, pendingPayload, kind, createdAt, updatedAt, id, controlNumber, ...fields } = row;
+    setForm({ ...emptyForm, ...fields, acquisitionCost: row.acquisitionCost || "" });
     setEditingId(row.id);
     setControlNumber(row.controlNumber || "");
     setError("");
@@ -136,20 +154,51 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
   }
 
   async function removeRow(row) {
-    if (!window.confirm(`Delete ${row.controlNumber}?`)) return;
+    const pendingDelete = user?.role === "encoder";
+    const question = pendingDelete
+      ? `Submit ${row.controlNumber} for deletion? An Assistant Admin or Super Admin must approve it.`
+      : `Delete ${row.controlNumber}?`;
+    if (!window.confirm(question)) return;
     setError("");
+    setNotice("");
     const response = await fetch(`/api/printers?id=${encodeURIComponent(row.id)}`, { method: "DELETE" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       setError(data.error || "Could not delete this printer.");
       return;
     }
+    if (data.pending && data.printer) {
+      setRows((current) => current.map((item) => (item.id === data.printer.id ? data.printer : item)));
+      setNotice(data.message);
+      return;
+    }
     setRows((current) => current.filter((item) => item.id !== row.id));
+  }
+
+  async function decide(row, decision) {
+    setError("");
+    setNotice("");
+    const response = await fetch("/api/approvals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ equipment: "printer", id: row.id, decision }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(data.error || "Could not update this request.");
+      return;
+    }
+    if (data.removed || (decision === "approve" && row.pendingAction === "delete")) {
+      setRows((current) => current.filter((item) => item.id !== row.id));
+      return;
+    }
+    if (data.record) setRows((current) => current.map((item) => (item.id === data.record.id ? data.record : item)));
   }
 
   async function onSubmit(event) {
     event.preventDefault();
     setError("");
+    setNotice("");
     setBusy(true);
     try {
       const response = await fetch("/api/printers", {
@@ -163,6 +212,7 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
         return;
       }
       setRows((current) => [data.printer, ...current.filter((row) => row.id !== data.printer.id)]);
+      setNotice(data.pending ? data.message : "");
       setForm(emptyForm);
       setEditingId("");
       setMode("list");
@@ -190,6 +240,7 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
       {mode === "list" ? (
         <section className="panel-card">
           {error ? <p className="error" role="alert">{error}</p> : null}
+          {notice ? <p className="hint">{notice}</p> : null}
           {rows.length === 0 ? (
             <p className="hint">No printers encoded yet. Use Add to encode one.</p>
           ) : (
@@ -197,20 +248,37 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
               <table className="computer-table">
                 <thead>
                   <tr>
-                    <th>Actions</th>
-                    {printerColumns.map(([key, label]) => <th key={key}>{label}</th>)}
+                    <th className="freeze">Actions</th>
+                    {columns.map(([key, label]) => <th key={key}>{label}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row.id || row.controlNumber}>
-                      <td>
+                      <td className="freeze">
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
+                          {canDecide(row) ? (
+                            <>
+                              <button className="row-btn" type="button" onClick={() => decide(row, "approve")}>Approve</button>
+                              <button className="row-btn danger" type="button" onClick={() => decide(row, "reject")}>Reject</button>
+                            </>
+                          ) : null}
                         </div>
+                        {row.pendingAction === "edit" ? <p className="pending-note">Edit awaiting approval</p> : null}
+                        {row.pendingAction === "delete" ? <p className="pending-note">Delete awaiting approval</p> : null}
+                        {row.pendingAction === "ber" ? <p className="pending-note">For BER awaiting Super Admin</p> : null}
                       </td>
-                      {printerColumns.map(([key]) => <td key={key}>{row[key] || "—"}</td>)}
+                      {columns.map(([key]) => (
+                        <td key={key}>
+                          {key === "aging"
+                            ? agingLabel(row.dateAcquired)
+                            : key === "status" && row.status === "Pending" && row.pendingStatus
+                              ? `Pending · ${row.pendingStatus}`
+                              : row[key] || "—"}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
@@ -341,7 +409,7 @@ export default function PrinterInventory({ initial = [], locations = [] }) {
           {error ? <p className="error" role="alert">{error}</p> : null}
           <div className="computer-actions">
             <button className="ghost" type="button" onClick={cancel}>Cancel</button>
-            <button type="submit" disabled={busy}>{busy ? "Saving…" : editingId ? "Update printer" : "Save printer"}</button>
+            <button type="submit" disabled={busy}>{busy ? "Saving…" : needsApproval() ? "Submit for approval" : editingId ? "Update printer" : "Save printer"}</button>
           </div>
         </form>
       )}

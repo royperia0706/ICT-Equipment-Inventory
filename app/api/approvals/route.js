@@ -1,0 +1,26 @@
+import { decideEquipment } from "@/lib/review";
+import { getSession, json } from "@/lib/session";
+import { getUser, publicUser } from "@/lib/users";
+
+async function actor() {
+  const session = await getSession();
+  if (session.step !== "verified" || !session.username) return null;
+  const user = await getUser(session.username);
+  return user ? publicUser(user) : null;
+}
+
+export async function POST(request) {
+  const user = await actor();
+  if (!user) return json({ ok: false, error: "Sign in first." }, 401);
+  const body = await request.json().catch(() => ({}));
+  const kind = body.equipment === "printer" ? "printer" : "computer";
+  if (!body.id || (body.decision !== "approve" && body.decision !== "reject")) {
+    return json({ ok: false, error: "Choose approve or reject." }, 400);
+  }
+  try {
+    const record = await decideEquipment(kind, user, body.id, body.decision);
+    return json({ ok: true, record, removed: !record });
+  } catch (error) {
+    return json({ ok: false, error: error.message || "Could not update the request." }, error.status || 400);
+  }
+}

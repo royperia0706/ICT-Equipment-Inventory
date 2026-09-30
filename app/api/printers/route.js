@@ -1,5 +1,6 @@
 import { applyScope, inScope } from "@/lib/access";
-import { addPrinter, deletePrinter, getPrinter, listPrinters, previewPrinterNumber, updatePrinter } from "@/lib/printers";
+import { getPrinter, listPrinters, previewPrinterNumber } from "@/lib/printers";
+import { requestDelete, saveEquipment } from "@/lib/review";
 import { getSession, json } from "@/lib/session";
 import { getUser, publicUser } from "@/lib/users";
 
@@ -33,7 +34,8 @@ export async function POST(request) {
   if (!user) return json({ ok: false, error: "Sign in first." }, 401);
   const body = await request.json().catch(() => ({}));
   try {
-    return json({ ok: true, printer: await addPrinter(applyScope(user, body)) });
+    const result = await saveEquipment("printer", user, applyScope(user, body), null);
+    return json({ ok: true, printer: result.record, pending: result.pending, message: result.message });
   } catch (error) {
     return fail(error);
   }
@@ -48,7 +50,8 @@ export async function PATCH(request) {
     if (!existing || !inScope(user, existing)) {
       return json({ ok: false, error: "You cannot edit this printer." }, 403);
     }
-    return json({ ok: true, printer: await updatePrinter(existing.id, applyScope(user, body)) });
+    const result = await saveEquipment("printer", user, applyScope(user, body), existing);
+    return json({ ok: true, printer: result.record, pending: result.pending, message: result.message });
   } catch (error) {
     return fail(error);
   }
@@ -63,8 +66,8 @@ export async function DELETE(request) {
     if (!existing || !inScope(user, existing)) {
       return json({ ok: false, error: "You cannot delete this printer." }, 403);
     }
-    await deletePrinter(existing.id);
-    return json({ ok: true });
+    const result = await requestDelete("printer", user, existing);
+    return json({ ok: true, printer: result.record, pending: result.pending, message: result.message });
   } catch (error) {
     return fail(error);
   }

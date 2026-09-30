@@ -1,5 +1,6 @@
 import { applyScope, inScope } from "@/lib/access";
-import { addComputer, deleteComputer, getComputer, listComputers, previewControlNumber, updateComputer } from "@/lib/computers";
+import { getComputer, listComputers, previewControlNumber } from "@/lib/computers";
+import { requestDelete, saveEquipment } from "@/lib/review";
 import { getSession, json } from "@/lib/session";
 import { getUser, publicUser } from "@/lib/users";
 
@@ -33,7 +34,8 @@ export async function POST(request) {
   if (!user) return json({ ok: false, error: "Sign in first." }, 401);
   const body = await request.json().catch(() => ({}));
   try {
-    return json({ ok: true, computer: await addComputer(applyScope(user, body)) });
+    const result = await saveEquipment("computer", user, applyScope(user, body), null);
+    return json({ ok: true, computer: result.record, pending: result.pending, message: result.message });
   } catch (error) {
     return fail(error);
   }
@@ -48,7 +50,8 @@ export async function PATCH(request) {
     if (!existing || !inScope(user, existing)) {
       return json({ ok: false, error: "You cannot edit this computer." }, 403);
     }
-    return json({ ok: true, computer: await updateComputer(existing.id, applyScope(user, body)) });
+    const result = await saveEquipment("computer", user, applyScope(user, body), existing);
+    return json({ ok: true, computer: result.record, pending: result.pending, message: result.message });
   } catch (error) {
     return fail(error);
   }
@@ -63,8 +66,8 @@ export async function DELETE(request) {
     if (!existing || !inScope(user, existing)) {
       return json({ ok: false, error: "You cannot delete this computer." }, 403);
     }
-    await deleteComputer(existing.id);
-    return json({ ok: true });
+    const result = await requestDelete("computer", user, existing);
+    return json({ ok: true, computer: result.record, pending: result.pending, message: result.message });
   } catch (error) {
     return fail(error);
   }

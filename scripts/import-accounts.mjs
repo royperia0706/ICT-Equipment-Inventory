@@ -22,6 +22,7 @@ function provinceName(unit) {
 }
 
 function roleFor(access) {
+  if (/super/i.test(access)) return "super-admin";
   return /assistant/i.test(access) ? "assistant-admin" : "encoder";
 }
 

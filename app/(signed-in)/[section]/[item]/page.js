@@ -26,7 +26,7 @@ export default async function ItemPage({ params }) {
       } catch {
         computers = [];
       }
-      return <ComputerInventory initial={computers} locations={locations} />;
+      return <ComputerInventory initial={computers} locations={locations} user={user} />;
     }
     let printers = [];
     try {
@@ -34,7 +34,7 @@ export default async function ItemPage({ params }) {
     } catch {
       printers = [];
     }
-    return <PrinterInventory initial={printers} locations={locations} />;
+    return <PrinterInventory initial={printers} locations={locations} user={user} />;
   }
   const page = moduleFor(section, item);
   if (!page) notFound();
