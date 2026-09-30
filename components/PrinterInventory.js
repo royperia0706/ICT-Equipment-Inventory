@@ -67,6 +67,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [basicRequest, setBasicRequest] = useState(false);
 
   const provinceOptions = useMemo(() => {
     const region = regionsIn(locations)[0];
@@ -140,6 +141,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
   function cancel() {
     setForm(emptyForm);
     setEditingId("");
+    setBasicRequest(false);
     setError("");
     setMode("list");
   }
@@ -148,6 +150,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
     const { pendingAction, pendingStatus, pendingBy, previousStatus, pendingPayload, kind, createdAt, updatedAt, id, controlNumber, ...fields } = row;
     setForm({ ...emptyForm, ...fields, acquisitionCost: row.acquisitionCost || "" });
     setEditingId(row.id);
+    setBasicRequest(false);
     setControlNumber(row.controlNumber || "");
     setError("");
     setMode("edit");
@@ -204,7 +207,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
       const response = await fetch("/api/printers", {
         method: editingId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingId ? { ...form, id: editingId } : form),
+        body: JSON.stringify(editingId ? { ...form, id: editingId, requestBasicEdit: basicRequest } : form),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.printer) {
@@ -233,7 +236,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
           <h1>{title}</h1>
         </div>
         {mode === "list" ? (
-          <button className="add-btn" type="button" onClick={() => { setEditingId(""); setForm(emptyForm); setMode("add"); }}>Add</button>
+          <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
         ) : null}
       </header>
 
@@ -289,8 +292,18 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
       ) : (
         <form className="computer-form" onSubmit={onSubmit}>
           <section className="panel-card">
-            <h2>Basic information</h2>
-            <div className="form-grid">
+            <div className="section-head">
+              <h2>Basic information</h2>
+              {editingId && user?.role === "encoder" ? (
+                <button className="ghost" type="button" disabled={basicRequest} onClick={() => setBasicRequest(true)}>
+                  {basicRequest ? "Edit requested" : "Request for edit"}
+                </button>
+              ) : null}
+            </div>
+            {editingId && user?.role === "encoder" ? (
+              <p className="hint">{basicRequest ? "This change stays pending until an Assistant Admin or Super Admin approves it." : "Basic information is locked so the saved record is not overwritten."}</p>
+            ) : null}
+            <fieldset className="form-grid" disabled={Boolean(editingId) && user?.role === "encoder" && !basicRequest}>
               <Field label="Control Number" required>
                 <input value={controlNumber} disabled />
               </Field>
@@ -315,7 +328,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
               <Field label="IP Address">
                 <input name="ipAddress" value={form.ipAddress} onChange={update} placeholder="Hal. 192.168.1.50" />
               </Field>
-            </div>
+            </fieldset>
           </section>
 
           <section className="panel-card">

@@ -620,6 +620,31 @@ button:disabled { opacity: 0.6; cursor: wait; }
   font-weight: 600;
 }
 
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-head h2 { margin: 0; }
+
+.section-head .ghost { margin: 0; white-space: nowrap; }
+
+fieldset.form-grid {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.computer-form select:disabled,
+.computer-form textarea:disabled {
+  background: #eef2ff;
+  color: #1e3a5f;
+}
+
 .type-list {
   display: grid;
   gap: 28px;
