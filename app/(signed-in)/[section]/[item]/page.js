@@ -1,26 +1,42 @@
 import { notFound } from "next/navigation";
 import ComputerInventory from "@/components/ComputerInventory";
-import Dashboard from "@/components/Dashboard";
 import ModuleView from "@/components/ModuleView";
+import PrinterInventory from "@/components/PrinterInventory";
+import { scopeLocations } from "@/lib/access";
 import { listComputers } from "@/lib/computers";
+import { requireUser } from "@/lib/guard";
 import { listLocations } from "@/lib/locations";
 import { moduleFor } from "@/lib/navigation";
+import { listPrinters } from "@/lib/printers";
 
 export default async function ItemPage({ params }) {
   const { section, item } = await params;
-  if (section === "inventory" && item === "computer") {
+  if (section === "inventory" && (item === "computer" || item === "printer")) {
+    const user = await requireUser();
     let locations = [];
     try {
-      locations = await listLocations();
+      locations = scopeLocations(user, await listLocations());
     } catch {
       locations = [];
     }
-    return <ComputerInventory initial={await listComputers()} locations={locations} />;
+    if (item === "computer") {
+      let computers = [];
+      try {
+        computers = await listComputers(user);
+      } catch {
+        computers = [];
+      }
+      return <ComputerInventory initial={computers} locations={locations} />;
+    }
+    let printers = [];
+    try {
+      printers = await listPrinters(user);
+    } catch {
+      printers = [];
+    }
+    return <PrinterInventory initial={printers} locations={locations} />;
   }
   const page = moduleFor(section, item);
   if (!page) notFound();
-  if (section === "pro4a") {
-    return <Dashboard kicker="PRO4A" title={page.title} />;
-  }
   return <ModuleView page={page} />;
 }

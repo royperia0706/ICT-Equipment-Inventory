@@ -157,14 +157,14 @@ export default function AppShell({ user, children }) {
                 setAlertsOpen(false);
               }}
             >
-              <span className="avatar">{user.displayName.slice(0, 1)}</span>
+              <span className="avatar">{String(user.displayName || "U").slice(0, 1)}</span>
               <span>{user.displayName}</span>
               <Icon name="chevron" />
             </button>
             {accountOpen ? (
               <div className="pop-panel account-panel">
-                <p className="pop-title">{user.role === "admin" ? "Administrator" : "Staff"}</p>
-                <p className="account-email">{user.email}</p>
+                <p className="pop-title">{user.access || (user.role === "assistant-admin" ? "Assistant Admin" : "Encoder")}</p>
+                <p className="account-email">{user.username}</p>
                 <SignOutButton className="side-link">Sign out</SignOutButton>
               </div>
             ) : null}

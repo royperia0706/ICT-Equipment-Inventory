@@ -10,7 +10,8 @@ export default function OfficeStationFilters({ locations = [] }) {
   const [office, setOffice] = useState(offices[0] || "");
   const [stationId, setStationId] = useState("");
   const stations = useMemo(() => stationsIn(locations, office), [locations, office]);
-  const selected = stations.find((row) => `${row.unit}-${row.name}` === stationId) || null;
+  const activeStation = stations.length === 1 ? `${stations[0].unit}-${stations[0].name}` : stationId;
+  const selected = stations.find((row) => `${row.unit}-${row.name}` === activeStation) || null;
 
   return (
     <section className="panel-card dash-filters">
@@ -18,6 +19,7 @@ export default function OfficeStationFilters({ locations = [] }) {
         Region
         <select
           value={region}
+          disabled={regions.length <= 1}
           onChange={(event) => {
             const nextRegion = event.target.value;
             const nextOffices = officesIn(locations, nextRegion);
@@ -35,6 +37,7 @@ export default function OfficeStationFilters({ locations = [] }) {
         Office
         <select
           value={office}
+          disabled={offices.length <= 1}
           onChange={(event) => {
             setOffice(event.target.value);
             setStationId("");
@@ -47,8 +50,8 @@ export default function OfficeStationFilters({ locations = [] }) {
       </label>
       <label>
         Station
-        <select value={stationId} onChange={(event) => setStationId(event.target.value)}>
-          <option value="">All stations</option>
+        <select value={activeStation} disabled={stations.length <= 1} onChange={(event) => setStationId(event.target.value)}>
+          {stations.length > 1 ? <option value="">All stations</option> : null}
           {stations.map((row) => (
             <option key={`${row.unit}-${row.name}`} value={`${row.unit}-${row.name}`}>
               {row.name} ({row.classification})

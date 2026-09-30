@@ -30,6 +30,19 @@ function pieSlices(rows) {
 
 function Pie({ rows, label }) {
   const slices = pieSlices(rows);
+  if (!slices.length) {
+    return (
+      <ul className="pie-legend">
+        {(rows.length ? rows : [{ label: "No equipment yet", value: 0 }]).map((row) => (
+          <li key={row.label}>
+            <i style={{ background: "#C8CCD2" }} />
+            <span>{row.label}</span>
+            <strong>{number(row.value)}</strong>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <div className="pie-block">
       <svg className="donut" viewBox="0 0 200 200" role="img" aria-label={label}>
@@ -65,8 +78,12 @@ function Pie({ rows, label }) {
   );
 }
 
-export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [] }) {
-  const statusRows = totals.filter((item) => item.label !== "Total equipment");
+export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [], summary }) {
+  const cards = summary?.totals || totals;
+  const statusRows = cards.filter((item) => item.label !== "Total equipment");
+  const provinceRows = summary?.provinces || provinces;
+  const attentionRows = summary?.attention || attention;
+  const activityRows = summary?.activities || activities;
 
   return (
     <div className="dash">
@@ -78,7 +95,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
       <OfficeStationFilters locations={locations} />
 
       <section className="stat-grid" aria-label="Equipment totals">
-        {totals.map((item) => (
+        {cards.map((item) => (
           <article key={item.label} className={`stat tone-${item.tone}`}>
             <p>{item.label}</p>
             <strong>{number(item.value)}</strong>
@@ -93,7 +110,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
         </article>
         <article className="panel-card">
           <h2>Equipment by province</h2>
-          <Pie rows={provinces} label="Equipment by province" />
+          <Pie rows={provinceRows} label="Equipment by province" />
           <Link className="text-link" href="/inventory/locations">View by location</Link>
         </article>
       </section>
@@ -101,7 +118,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
       <section className="panel-card">
         <h2>Needs attention</h2>
         <ul className="attention">
-          {attention.map((item) => (
+          {attentionRows.map((item) => (
             <li key={item.label}>
               <span>{item.label}</span>
               <strong>{number(item.count)}</strong>
@@ -114,7 +131,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
       <section className="panel-card">
         <h2>Recent activities</h2>
         <ul className="activity">
-          {activities.map((item) => (
+          {activityRows.length === 0 ? <li><span>No recent activity.</span></li> : activityRows.map((item) => (
             <li key={item.time + item.label}>
               <time>{item.time}</time>
               <span>{item.label}</span>

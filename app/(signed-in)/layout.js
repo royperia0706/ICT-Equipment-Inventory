@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default async function SignedInLayout({ children }) {
   const user = await requireUser();
   return (
-    <AppShell user={{ displayName: user.displayName, email: user.email, role: user.role }}>
+    <AppShell user={user}>
       {children}
     </AppShell>
   );

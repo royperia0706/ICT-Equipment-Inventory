@@ -1,21 +1,16 @@
-import { isBlankLogin, temporaryUser } from "@/lib/guard";
 import { clearLock, inspectLock, registerFailure } from "@/lib/lockout";
 import { json, setSession } from "@/lib/session";
-import { authenticate, publicUser } from "@/lib/users";
-
-const CHALLENGE = 60 * 10;
+import { authenticate, normalizeUsername } from "@/lib/users";
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
-  const email = body.email;
+  const username = normalizeUsername(body.username ?? body.email);
 
-  if (isBlankLogin(email, body.password)) {
-    await setSession({ email: temporaryUser.email, step: "verified", temporary: true });
-    return json({ ok: true, step: "verified", ...temporaryUser });
+  if (!username || !String(body.password || "")) {
+    return json({ ok: false, error: "Enter your username and password." }, 400);
   }
 
-  const lock = inspectLock(email);
-
+  const lock = inspectLock(username);
   if (lock.blocked) {
     return json(
       { ok: false, error: lock.error, code: lock.code, retryAfter: lock.retryAfter ?? 0 },
@@ -23,9 +18,15 @@ export async function POST(request) {
     );
   }
 
-  const user = authenticate(email, body.password);
+  let user = null;
+  try {
+    user = await authenticate(username, body.password);
+  } catch (error) {
+    return json({ ok: false, error: error.message }, 503);
+  }
+
   if (!user) {
-    const failure = registerFailure(email);
+    const failure = registerFailure(username);
     return json(
       {
         ok: false,
@@ -38,13 +39,7 @@ export async function POST(request) {
     );
   }
 
-  clearLock(email);
-  const step = user.totpEnabled ? "verify" : "setup";
-  await setSession({ email: user.email, step, pendingSecret: null }, CHALLENGE);
-
-  return json({
-    ok: true,
-    step,
-    ...publicUser(user),
-  });
+  clearLock(username);
+  await setSession({ username: user.username, step: "verified" });
+  return json({ ok: true, step: "verified", ...user });
 }

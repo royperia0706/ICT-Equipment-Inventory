@@ -833,6 +833,28 @@ button:disabled { opacity: 0.6; cursor: wait; }
   font: inherit;
 }
 
+.dash-filters select:disabled,
+.computer-form select:disabled {
+  background: #eef2ff;
+  color: #1e3a5f;
+  font-weight: 600;
+}
+
+.shell button.row-btn {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.shell button.row-btn.danger {
+  background: #8d2f2f;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+
 .filter-note {
   grid-column: 1 / -1;
   margin: 0;
