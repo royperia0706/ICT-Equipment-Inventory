@@ -60,6 +60,7 @@ const emptyForm = {
   problemDetail: "",
   dateAssessed: "",
   reasonForBer: "",
+  yearMissing: "",
   modeOfAcquisition: "",
   dedicatedUse: "",
   dedicatedUseOthers: "",
@@ -119,6 +120,7 @@ function formFromRow(row) {
     problemDetail: row.problemDetail || "",
     dateAssessed: row.dateAssessed || "",
     reasonForBer: row.reasonForBer || "",
+    yearMissing: row.yearMissing || "",
     modeOfAcquisition: row.modeOfAcquisition || emptyForm.modeOfAcquisition,
     dedicatedUse: known ? row.dedicatedUse : row.dedicatedUse ? "Others" : "",
     dedicatedUseOthers: known ? "" : row.dedicatedUse || "",
@@ -607,9 +609,14 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                 </>
               ) : null}
               {form.status === "Missing" ? (
-                <Field label="Remarks" wide>
-                  <textarea name="remarks" rows={3} value={form.remarks} onChange={update} />
-                </Field>
+                <>
+                  <Field label="Year discovered missing">
+                    <Select name="yearMissing" value={form.yearMissing} onChange={update} options={form.yearMissing && !acquireYears().includes(String(form.yearMissing)) ? [String(form.yearMissing), ...acquireYears()] : acquireYears()} />
+                  </Field>
+                  <Field label="Remarks" wide>
+                    <textarea name="remarks" rows={3} value={form.remarks} onChange={update} />
+                  </Field>
+                </>
               ) : null}
             </div>
           </section>
