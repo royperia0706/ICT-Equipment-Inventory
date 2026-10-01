@@ -16,6 +16,11 @@ export default function AppShell({ user, children }) {
   const pathname = usePathname();
   const [navOpen, setNavOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordNotice, setPasswordNotice] = useState("");
+  const [passwordBusy, setPasswordBusy] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const menu = navigation.filter((item) => item.href !== "/accounts" || user?.role !== "encoder");
   const [groups, setGroups] = useState({
@@ -166,6 +171,65 @@ export default function AppShell({ user, children }) {
               <div className="pop-panel account-panel">
                 <p className="pop-title">{user.access || (user.role === "assistant-admin" ? "Assistant Admin" : "Encoder")}</p>
                 <p className="account-email">{user.username}</p>
+                {passwordOpen ? (
+                  <form
+                    className="password-form"
+                    onSubmit={async (event) => {
+                      event.preventDefault();
+                      setPasswordError("");
+                      setPasswordNotice("");
+                      setPasswordBusy(true);
+                      try {
+                        const response = await fetch("/api/password", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(passwordForm),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                          setPasswordError(data.error || "Could not change the password.");
+                          return;
+                        }
+                        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                        setPasswordNotice("Password changed.");
+                        setPasswordOpen(false);
+                      } catch {
+                        setPasswordError("Could not change the password.");
+                      } finally {
+                        setPasswordBusy(false);
+                      }
+                    }}
+                  >
+                    <label>
+                      Current password
+                      <input type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))} required />
+                    </label>
+                    <label>
+                      New password
+                      <input type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))} required />
+                    </label>
+                    <label>
+                      Confirm password
+                      <input type="password" autoComplete="new-password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} required />
+                    </label>
+                    {passwordError ? <p className="error">{passwordError}</p> : null}
+                    <button type="submit" disabled={passwordBusy}>{passwordBusy ? "Saving…" : "Save password"}</button>
+                    <button className="ghost" type="button" onClick={() => { setPasswordOpen(false); setPasswordError(""); }}>Cancel</button>
+                  </form>
+                ) : (
+                  <button
+                    className="side-link"
+                    type="button"
+                    onClick={() => {
+                      setPasswordOpen(true);
+                      setPasswordError("");
+                      setPasswordNotice("");
+                    }}
+                  >
+                    Change Password
+                  </button>
+                )}
+                {passwordNotice ? <p className="account-email">{passwordNotice}</p> : null}
                 <SignOutButton className="side-link">Sign out</SignOutButton>
               </div>
             ) : null}

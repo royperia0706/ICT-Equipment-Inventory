@@ -509,6 +509,28 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .account-panel .side-link {
   color: var(--ink);
   background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.password-form {
+  display: grid;
+  gap: 8px;
+  padding: 4px 8px 8px;
+}
+
+.password-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.password-form input {
+  width: 100%;
+}
+
+.shell .password-form button {
+  margin: 0;
 }
 
 .canvas {

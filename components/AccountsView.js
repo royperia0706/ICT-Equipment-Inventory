@@ -234,7 +234,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                           {canChange(user, account) ? (
                             <div className="row-actions">
                               <button className="row-btn" type="button" onClick={() => openEdit(account)}>Edit</button>
-                              {account.username !== user.username ? (
+                              {account.username !== user.username && account.role === "super-admin" ? (
                                 <button className="row-btn danger" type="button" onClick={() => remove(account)}>Delete</button>
                               ) : null}
                               {user.role === "super-admin" && account.pendingAction ? (
