@@ -5,7 +5,7 @@ import {
   acquisitions,
   assignmentStatuses,
   computerColumns,
-  conditions,
+  conditionsByStatus,
   connectivityOptions,
   computerSeries,
   dedicatedUses,
@@ -56,6 +56,10 @@ const emptyForm = {
   assignmentStatus: "",
   status: "",
   condition: "",
+  targetFixDate: "",
+  problemDetail: "",
+  dateAssessed: "",
+  reasonForBer: "",
   modeOfAcquisition: "",
   dedicatedUse: "",
   dedicatedUseOthers: "",
@@ -109,8 +113,12 @@ function formFromRow(row) {
     specificEndUser: row.specificEndUser || "",
     accountablePerson: row.accountablePerson || "",
     assignmentStatus: row.assignmentStatus || emptyForm.assignmentStatus,
-    status: row.status || emptyForm.status,
-    condition: row.condition || emptyForm.condition,
+    status: statuses.includes(row.status) ? row.status : statuses.includes(row.pendingStatus) ? row.pendingStatus : "",
+    condition: (conditionsByStatus[statuses.includes(row.status) ? row.status : statuses.includes(row.pendingStatus) ? row.pendingStatus : ""] || []).includes(row.condition) ? row.condition : "",
+    targetFixDate: row.targetFixDate || "",
+    problemDetail: row.problemDetail || "",
+    dateAssessed: row.dateAssessed || "",
+    reasonForBer: row.reasonForBer || "",
     modeOfAcquisition: row.modeOfAcquisition || emptyForm.modeOfAcquisition,
     dedicatedUse: known ? row.dedicatedUse : row.dedicatedUse ? "Others" : "",
     dedicatedUseOthers: known ? "" : row.dedicatedUse || "",
@@ -120,9 +128,9 @@ function formFromRow(row) {
   };
 }
 
-function Field({ label, required, children }) {
+function Field({ label, required, wide, children }) {
   return (
-    <label>
+    <label className={wide ? "span-row" : undefined}>
       <span>{label}{required ? " *" : ""}</span>
       {children}
     </label>
@@ -243,6 +251,14 @@ export default function ComputerInventory({ initial = [], locations = [], user =
         province: value,
         office: unit || "",
         municipality: stations[0]?.name || "",
+      }));
+      return;
+    }
+    if (name === "status") {
+      setForm((current) => ({
+        ...current,
+        status: value,
+        condition: "",
       }));
       return;
     }
@@ -553,11 +569,38 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             <h2>Status and condition</h2>
             <div className="form-grid">
               <Field label="Computer Status" required>
-                <Select name="status" value={form.status} onChange={update} options={form.status && !statuses.includes(form.status) ? [form.status, ...statuses] : statuses} required />
+                <Select name="status" value={statuses.includes(form.status) ? form.status : ""} onChange={update} options={statuses} required />
               </Field>
-              <Field label="Condition" required>
-                <Select name="condition" value={form.condition} onChange={update} options={form.condition && !conditions.includes(form.condition) ? [form.condition, ...conditions] : conditions} required />
-              </Field>
+              {(conditionsByStatus[form.status] || []).length ? (
+                <Field label="Condition" required>
+                  <Select name="condition" value={form.condition} onChange={update} options={conditionsByStatus[form.status]} required />
+                </Field>
+              ) : null}
+              {form.status === "Under Maintenance" ? (
+                <>
+                  <Field label="Target Date to be Fixed">
+                    <input name="targetFixDate" type="date" value={form.targetFixDate} onChange={update} />
+                  </Field>
+                  <Field label="Specify the computer's problem or defect." wide>
+                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} />
+                  </Field>
+                </>
+              ) : null}
+              {form.status === "BER" ? (
+                <>
+                  <Field label="Date Assessed">
+                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} />
+                  </Field>
+                  <Field label="Reason for BER" wide>
+                    <textarea name="reasonForBer" rows={3} value={form.reasonForBer} onChange={update} />
+                  </Field>
+                </>
+              ) : null}
+              {form.status === "Missing" ? (
+                <Field label="Remarks" wide>
+                  <textarea name="remarks" rows={3} value={form.remarks} onChange={update} />
+                </Field>
+              ) : null}
             </div>
           </section>
 
@@ -594,12 +637,14 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             </div>
           </section>
 
-          <section className="panel-card">
-            <h2>Remarks</h2>
-            <Field label="Remarks">
-              <textarea name="remarks" rows={3} value={form.remarks} onChange={update} />
-            </Field>
-          </section>
+          {form.status === "Missing" ? null : (
+            <section className="panel-card">
+              <h2>Remarks</h2>
+              <Field label="Remarks">
+                <textarea name="remarks" rows={3} value={form.remarks} onChange={update} />
+              </Field>
+            </section>
+          )}
 
           {error ? <p className="error" role="alert">{error}</p> : null}
           <div className="computer-actions">
