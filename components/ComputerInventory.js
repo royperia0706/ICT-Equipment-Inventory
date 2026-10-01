@@ -137,9 +137,9 @@ function Field({ label, required, wide, children }) {
   );
 }
 
-function Select({ name, value, onChange, options, disabled, required, blank = true }) {
+function Select({ name, value, onChange, options, disabled, required, blank = true, autoComplete = "off" }) {
   return (
-    <select name={name} value={value} onChange={onChange} disabled={disabled} required={required}>
+    <select name={name} value={value || ""} onChange={onChange} disabled={disabled} required={required} autoComplete={autoComplete}>
       {blank ? <option value="">--Select--</option> : null}
       {options.filter(Boolean).map((option) => {
         const item = typeof option === "string" ? { value: option, label: option } : option;
@@ -254,7 +254,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
       }));
       return;
     }
-    if (name === "status") {
+    if (name === "status" || name === "computerStatus") {
       setForm((current) => ({
         ...current,
         status: value,
@@ -426,7 +426,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
           )}
         </section>
       ) : (
-        <form className="computer-form dense-form" onSubmit={onSubmit}>
+        <form key={editingId || "new-computer"} className="computer-form dense-form" autoComplete="off" onSubmit={onSubmit}>
           <section className="panel-card">
             <div className="section-head">
               <h2>Basic information</h2>
@@ -569,9 +569,9 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             <h2>Status and condition</h2>
             <div className="form-grid">
               <Field label="Computer Status" required>
-                <Select name="status" value={statuses.includes(form.status) ? form.status : ""} onChange={update} options={statuses} required />
+                <Select name="computerStatus" value={form.status} onChange={update} options={statuses} required />
               </Field>
-              {(conditionsByStatus[form.status] || []).length ? (
+              {form.status && (conditionsByStatus[form.status] || []).length ? (
                 <Field label="Condition" required>
                   <Select name="condition" value={form.condition} onChange={update} options={conditionsByStatus[form.status]} required />
                 </Field>
