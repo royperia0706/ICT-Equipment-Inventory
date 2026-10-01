@@ -576,6 +576,16 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                   <Select name="condition" value={form.condition} onChange={update} options={conditionsByStatus[form.status]} required />
                 </Field>
               ) : null}
+              {form.status === "Unserviceable" ? (
+                <>
+                  <Field label="Date Assessed">
+                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} />
+                  </Field>
+                  <Field label="Specify the computer's problem or defect." wide>
+                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} />
+                  </Field>
+                </>
+              ) : null}
               {form.status === "Under Maintenance" ? (
                 <>
                   <Field label="Target Date to be Fixed">
