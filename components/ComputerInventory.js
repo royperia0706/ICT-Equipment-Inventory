@@ -11,9 +11,9 @@ import {
   dedicatedUses,
   equipmentTypes,
   formatControl,
+  acquireYears,
   licenseStatuses,
   ramSizes,
-  sections,
   statuses,
   storageUnits,
 } from "@/lib/computer-fields";
@@ -31,8 +31,9 @@ const emptyForm = {
   model: "",
   serialNumber: "",
   processor: "",
-  speed: "",
   frequency: "",
+  numberOfCores: "",
+  logicalProcessor: "",
   ram: "",
   ssdValue: "",
   ssdUnit: "GB",
@@ -85,8 +86,9 @@ function formFromRow(row) {
     model: row.model || "",
     serialNumber: row.serialNumber || "",
     processor: row.processor || "",
-    speed: row.speed || "",
-    frequency: row.frequency || "",
+    frequency: row.speed && row.numberOfCores == null && row.logicalProcessor == null ? row.speed : row.frequency || "",
+    numberOfCores: row.numberOfCores || (row.speed && row.numberOfCores == null && row.logicalProcessor == null ? row.frequency : ""),
+    logicalProcessor: row.logicalProcessor || "",
     ram: String(row.ram || "").replace(/\s*GB$/i, ""),
     ssdValue: ssd.value,
     ssdUnit: ssd.unit,
@@ -110,9 +112,9 @@ function formFromRow(row) {
     status: row.status || emptyForm.status,
     condition: row.condition || emptyForm.condition,
     modeOfAcquisition: row.modeOfAcquisition || emptyForm.modeOfAcquisition,
-    dedicatedUse: known ? row.dedicatedUse : row.dedicatedUse ? "Others" : "None",
+    dedicatedUse: known ? row.dedicatedUse : row.dedicatedUse ? "Others" : "",
     dedicatedUseOthers: known ? "" : row.dedicatedUse || "",
-    dateAcquired: row.dateAcquired || "",
+    dateAcquired: String(row.dateAcquired || "").slice(0, 4),
     acquisitionCost: row.acquisitionCost || "",
     remarks: row.remarks || "",
   };
@@ -191,6 +193,11 @@ export default function ComputerInventory({ initial = [], locations = [], user =
   }, [mode, form.municipality, form.office]);
 
   const columns = useMemo(() => columnsWithAging(computerColumns), []);
+  const yearChoices = useMemo(() => {
+    const years = acquireYears();
+    const current = String(form.dateAcquired || "").slice(0, 4);
+    return current && !years.includes(current) ? [current, ...years] : years;
+  }, [form.dateAcquired]);
   const listColumns = [
     ["controlNumber", "Control Number"],
     ["equipmentType", "Equipment Type"],
@@ -456,11 +463,14 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Processor">
                 <input name="processor" value={form.processor} onChange={update} placeholder="hal. Intel Core i5" />
               </Field>
-              <Field label="Speed">
-                <input name="speed" value={form.speed} onChange={update} placeholder="hal. 2.4 GHz" />
-              </Field>
               <Field label="Frequency">
-                <input name="frequency" value={form.frequency} onChange={update} placeholder="hal. 4.2 GHz" />
+                <input name="frequency" value={form.frequency} onChange={update} placeholder="hal. 2.4 GHz" />
+              </Field>
+              <Field label="Number of Cores">
+                <input name="numberOfCores" value={form.numberOfCores} onChange={update} />
+              </Field>
+              <Field label="Logical Processor">
+                <input name="logicalProcessor" value={form.logicalProcessor} onChange={update} />
               </Field>
               <Field label="RAM (GB)">
                 <Select name="ram" value={form.ram} onChange={update} options={ramSizes.includes(form.ram) || !form.ram ? ramSizes : [form.ram, ...ramSizes]} />
@@ -525,16 +535,16 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                 />
               </Field>
               <Field label="Section">
-                <Select name="section" value={form.section} onChange={update} options={sections} />
+                <input name="section" value={form.section} onChange={update} />
               </Field>
               <Field label="Specific End User">
                 <input name="specificEndUser" value={form.specificEndUser} onChange={update} placeholder="Pangalan ng end user" />
               </Field>
+              <Field label="Assignment Status" required>
+                <Select name="assignmentStatus" value={form.assignmentStatus} onChange={update} options={form.assignmentStatus && !assignmentStatuses.includes(form.assignmentStatus) ? [form.assignmentStatus, ...assignmentStatuses] : assignmentStatuses} required />
+              </Field>
               <Field label="Accountable Person">
                 <input name="accountablePerson" value={form.accountablePerson} onChange={update} placeholder="Pangalan ng taong may pananagutan" />
-              </Field>
-              <Field label="Assignment Status" required>
-                <Select name="assignmentStatus" value={form.assignmentStatus} onChange={update} options={assignmentStatuses} required />
               </Field>
             </div>
           </section>
@@ -542,11 +552,11 @@ export default function ComputerInventory({ initial = [], locations = [], user =
           <section className="panel-card">
             <h2>Status and condition</h2>
             <div className="form-grid">
-              <Field label="Status" required>
-                <Select name="status" value={form.status} onChange={update} options={statuses} required />
+              <Field label="Computer Status" required>
+                <Select name="status" value={form.status} onChange={update} options={form.status && !statuses.includes(form.status) ? [form.status, ...statuses] : statuses} required />
               </Field>
               <Field label="Condition" required>
-                <Select name="condition" value={form.condition} onChange={update} options={conditions} required />
+                <Select name="condition" value={form.condition} onChange={update} options={form.condition && !conditions.includes(form.condition) ? [form.condition, ...conditions] : conditions} required />
               </Field>
             </div>
           </section>
@@ -555,18 +565,18 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             <h2>Acquisition and warranty</h2>
             <div className="form-grid">
               <Field label="Mode of Acquisition" required>
-                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={acquisitions} required />
+                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={form.modeOfAcquisition && !acquisitions.includes(form.modeOfAcquisition) ? [form.modeOfAcquisition, ...acquisitions] : acquisitions} required />
               </Field>
               <Field label="Dedicated Use For">
-                <Select name="dedicatedUse" value={form.dedicatedUse} onChange={update} options={dedicatedUses} />
+                <Select name="dedicatedUse" value={form.dedicatedUse} onChange={update} options={form.dedicatedUse && !dedicatedUses.includes(form.dedicatedUse) ? [form.dedicatedUse, ...dedicatedUses] : dedicatedUses} />
               </Field>
               {form.dedicatedUse === "Others" ? (
                 <Field label="Others (Please Specify:)">
                   <input name="dedicatedUseOthers" value={form.dedicatedUseOthers} onChange={update} placeholder="Ilagay ang detalye..." />
                 </Field>
               ) : null}
-              <Field label="Date Acquired" required>
-                <input name="dateAcquired" type="date" value={form.dateAcquired} onChange={update} required />
+              <Field label="Year Acquired" required>
+                <Select name="dateAcquired" value={form.dateAcquired} onChange={update} options={yearChoices} required />
               </Field>
               <Field label="Acquisition Cost">
                 <input
