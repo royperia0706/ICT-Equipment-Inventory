@@ -11,6 +11,7 @@ import {
   dedicatedUses,
   equipmentTypes,
   formatControl,
+  licenseStatuses,
   ramSizes,
   sections,
   statuses,
@@ -26,16 +27,25 @@ const emptyForm = {
   size: "",
   connectivity: "",
   brand: "",
+  monitorBrand: "",
   model: "",
   serialNumber: "",
   processor: "",
+  speed: "",
+  frequency: "",
   ram: "",
   ssdValue: "",
   ssdUnit: "GB",
   hddValue: "",
   hddUnit: "GB",
   gpu: "",
+  videoCapacity: "",
   os: "",
+  osStatus: "",
+  antivirus: "",
+  antivirusStatus: "",
+  officeSoftware: "",
+  officeStatus: "",
   province: "",
   municipality: "",
   office: "",
@@ -71,16 +81,25 @@ function formFromRow(row) {
     size: row.size || "",
     connectivity: row.connectivity || emptyForm.connectivity,
     brand: row.brand || "",
+    monitorBrand: row.monitorBrand || "",
     model: row.model || "",
     serialNumber: row.serialNumber || "",
     processor: row.processor || "",
+    speed: row.speed || "",
+    frequency: row.frequency || "",
     ram: String(row.ram || "").replace(/\s*GB$/i, ""),
     ssdValue: ssd.value,
     ssdUnit: ssd.unit,
     hddValue: hdd.value,
     hddUnit: hdd.unit,
     gpu: row.gpu || "",
+    videoCapacity: row.videoCapacity || "",
     os: row.os || "",
+    osStatus: row.osStatus || "",
+    antivirus: row.antivirus || "",
+    antivirusStatus: row.antivirusStatus || "",
+    officeSoftware: row.officeSoftware || "",
+    officeStatus: row.officeStatus || "",
     province: row.province || emptyForm.province,
     municipality: row.municipality || "",
     office: row.office || "",
@@ -178,7 +197,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
     ["computerName", "Computer Name"],
     ["display", "Type of Monitor"],
     ["size", "Size"],
-    ["brand", "Brand"],
+    ["brand", "System Unit/CPU Brand"],
     ["processor", "Processor"],
     ["ram", "RAM"],
     ["ssdStorage", "SSD Storage"],
@@ -384,7 +403,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
           )}
         </section>
       ) : (
-        <form className="computer-form" onSubmit={onSubmit}>
+        <form className="computer-form dense-form" onSubmit={onSubmit}>
           <section className="panel-card">
             <div className="section-head">
               <h2>Basic information</h2>
@@ -416,8 +435,11 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Connectivity">
                 <Select name="connectivity" value={form.connectivity} onChange={update} options={connectivityOptions} />
               </Field>
-              <Field label="Brand" required>
+              <Field label="System Unit/CPU Brand" required>
                 <input name="brand" value={form.brand} onChange={update} required />
+              </Field>
+              <Field label="Monitor Brand">
+                <input name="monitorBrand" value={form.monitorBrand} onChange={update} />
               </Field>
               <Field label="Model" required>
                 <input name="model" value={form.model} onChange={update} required />
@@ -432,7 +454,13 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             <h2>Computer specifications</h2>
             <div className="form-grid">
               <Field label="Processor">
-                <input name="processor" value={form.processor} onChange={update} placeholder="hal. Intel Core i5-1240P" />
+                <input name="processor" value={form.processor} onChange={update} placeholder="hal. Intel Core i5" />
+              </Field>
+              <Field label="Speed">
+                <input name="speed" value={form.speed} onChange={update} placeholder="hal. 2.4 GHz" />
+              </Field>
+              <Field label="Frequency">
+                <input name="frequency" value={form.frequency} onChange={update} placeholder="hal. 4.2 GHz" />
               </Field>
               <Field label="RAM (GB)">
                 <Select name="ram" value={form.ram} onChange={update} options={ramSizes.includes(form.ram) || !form.ram ? ramSizes : [form.ram, ...ramSizes]} />
@@ -449,11 +477,29 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                   <Select name="hddUnit" value={form.hddUnit} onChange={update} options={storageUnits} blank={false} />
                 </span>
               </Field>
-              <Field label="GPU">
-                <input name="gpu" value={form.gpu} onChange={update} placeholder="hal. NVIDIA RTX 3050 / Integrated" />
+              <Field label="Video Card">
+                <input name="gpu" value={form.gpu} onChange={update} placeholder="hal. NVIDIA RTX 3050" />
+              </Field>
+              <Field label="Capacity">
+                <input name="videoCapacity" value={form.videoCapacity} onChange={update} placeholder="hal. 4 GB" />
               </Field>
               <Field label="Operating System">
                 <input name="os" value={form.os} onChange={update} placeholder="hal. Windows 11 Pro" />
+              </Field>
+              <Field label="Status">
+                <Select name="osStatus" value={form.osStatus} onChange={update} options={licenseStatuses} />
+              </Field>
+              <Field label="Anti-Virus/End Point Security">
+                <input name="antivirus" value={form.antivirus} onChange={update} />
+              </Field>
+              <Field label="Status">
+                <Select name="antivirusStatus" value={form.antivirusStatus} onChange={update} options={licenseStatuses} />
+              </Field>
+              <Field label="Office Productivity Software">
+                <input name="officeSoftware" value={form.officeSoftware} onChange={update} placeholder="hal. Microsoft 365" />
+              </Field>
+              <Field label="Status">
+                <Select name="officeStatus" value={form.officeStatus} onChange={update} options={licenseStatuses} />
               </Field>
             </div>
           </section>
