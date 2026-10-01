@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "secrets/**",
+      "data/**",
+      ".vercel/**"
+    ],
+    "frameworksBackend": {
+      "region": "asia-southeast1"
+    }
+  }
+}

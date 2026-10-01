@@ -22,13 +22,12 @@ import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-ch
 const emptyForm = {
   equipmentType: "",
   computerName: "",
-  systemModel: "",
   display: "",
+  size: "",
   connectivity: "",
   brand: "",
   model: "",
   serialNumber: "",
-  assetTag: "",
   processor: "",
   ram: "",
   ssdValue: "",
@@ -68,13 +67,12 @@ function formFromRow(row) {
     ...emptyForm,
     equipmentType: row.equipmentType || emptyForm.equipmentType,
     computerName: row.computerName || "",
-    systemModel: row.systemModel || "",
     display: row.display || "",
+    size: row.size || "",
     connectivity: row.connectivity || emptyForm.connectivity,
     brand: row.brand || "",
     model: row.model || "",
     serialNumber: row.serialNumber || "",
-    assetTag: row.assetTag || "",
     processor: row.processor || "",
     ram: String(row.ram || "").replace(/\s*GB$/i, ""),
     ssdValue: ssd.value,
@@ -178,8 +176,8 @@ export default function ComputerInventory({ initial = [], locations = [], user =
     ["controlNumber", "Control Number"],
     ["equipmentType", "Equipment Type"],
     ["computerName", "Computer Name"],
-    ["systemModel", "System Model"],
-    ["display", "Display"],
+    ["display", "Type of Monitor"],
+    ["size", "Size"],
     ["brand", "Brand"],
     ["processor", "Processor"],
     ["ram", "RAM"],
@@ -409,11 +407,11 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Computer Name">
                 <input name="computerName" value={form.computerName} onChange={update} placeholder="hal. NPCS-UNIT-001" />
               </Field>
-              <Field label="System Model">
-                <input name="systemModel" value={form.systemModel} onChange={update} placeholder="hal. Latitude 5420" />
+              <Field label="Type of Monitor">
+                <input name="display" value={form.display} onChange={update} placeholder="hal. LCD, LED" />
               </Field>
-              <Field label="Display">
-                <input name="display" value={form.display} onChange={update} placeholder="hal. 14-inch FHD" />
+              <Field label="Size">
+                <input name="size" value={form.size} onChange={update} placeholder="hal. 14-inch" />
               </Field>
               <Field label="Connectivity">
                 <Select name="connectivity" value={form.connectivity} onChange={update} options={connectivityOptions} />
@@ -426,9 +424,6 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               </Field>
               <Field label="Serial Number" required>
                 <input name="serialNumber" value={form.serialNumber} onChange={update} required />
-              </Field>
-              <Field label="Asset Tag">
-                <input name="assetTag" value={form.assetTag} onChange={update} />
               </Field>
             </fieldset>
           </section>

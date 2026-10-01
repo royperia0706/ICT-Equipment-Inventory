@@ -1,0 +1,6 @@
+env:
+  - variable: FIREBASE_DATABASE_ID
+    value: pro4aictequipmentinventory
+    availability:
+      - BUILD
+      - RUNTIME
