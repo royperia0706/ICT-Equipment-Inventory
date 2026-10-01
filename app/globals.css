@@ -748,6 +748,28 @@ fieldset.form-grid {
   gap: 14px 16px;
 }
 
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+  margin: 0 0 18px;
+}
+
+.detail-grid div { min-width: 0; }
+
+.detail-grid dt {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.detail-grid dd {
+  margin: 0;
+  font-size: 15px;
+}
+
 .computer-form select,
 .computer-form textarea {
   width: 100%;
@@ -911,7 +933,7 @@ fieldset.form-grid {
 }
 
 @media (max-width: 640px) {
-  .stat-grid, .pie-block, .form-grid, .dash-filters { grid-template-columns: 1fr; }
+  .stat-grid, .pie-block, .form-grid, .detail-grid, .dash-filters { grid-template-columns: 1fr; }
   .pie-block svg { justify-self: center; }
   .attention li { grid-template-columns: 1fr auto; }
   .attention li strong { grid-column: 1; }

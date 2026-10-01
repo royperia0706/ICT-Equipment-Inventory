@@ -125,6 +125,7 @@ function Select({ name, value, onChange, options, disabled, required, blank = tr
 export default function ComputerInventory({ initial = [], locations = [], user = null }) {
   const [rows, setRows] = useState(initial);
   const [mode, setMode] = useState("list");
+  const [viewing, setViewing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [controlNumber, setControlNumber] = useState("");
@@ -173,6 +174,19 @@ export default function ComputerInventory({ initial = [], locations = [], user =
   }, [mode, form.municipality, form.office]);
 
   const columns = useMemo(() => columnsWithAging(computerColumns), []);
+  const listColumns = [
+    ["controlNumber", "Control Number"],
+    ["equipmentType", "Equipment Type"],
+    ["computerName", "Computer Name"],
+    ["systemModel", "System Model"],
+    ["display", "Display"],
+    ["brand", "Brand"],
+    ["processor", "Processor"],
+    ["ram", "RAM"],
+    ["ssdStorage", "SSD Storage"],
+    ["hddStorage", "HDD Storage"],
+    ["aging", "Aging"],
+  ];
 
   function canDecide(row) {
     if (!user || !row?.pendingAction) return false;
@@ -187,7 +201,13 @@ export default function ComputerInventory({ initial = [], locations = [], user =
     return Boolean(editingId) && user?.role === "encoder";
   }
 
-  const title = mode === "edit" ? "Edit computer equipment" : mode === "add" ? "Add computer equipment" : "Computer";
+  const title = mode === "edit" ? "Edit computer equipment" : mode === "add" ? "Add computer equipment" : mode === "view" ? "Computer details" : "Computer";
+
+  function cellValue(row, key) {
+    if (key === "aging") return agingLabel(row.dateAcquired);
+    if (key === "status" && row.status === "Pending" && row.pendingStatus) return `Pending · ${row.pendingStatus}`;
+    return row[key] || "—";
+  }
 
   function update(event) {
     const { name, value } = event.target;
@@ -306,7 +326,22 @@ export default function ComputerInventory({ initial = [], locations = [], user =
         ) : null}
       </header>
 
-      {mode === "list" ? (
+      {mode === "view" && viewing ? (
+        <section className="panel-card">
+          <h2>{viewing.controlNumber || "Computer"}</h2>
+          <dl className="detail-grid">
+            {columns.map(([key, label]) => (
+              <div key={key}>
+                <dt>{label}</dt>
+                <dd>{cellValue(viewing, key)}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="computer-actions">
+            <button className="ghost" type="button" onClick={() => { setViewing(null); setMode("list"); }}>Back</button>
+          </div>
+        </section>
+      ) : mode === "list" ? (
         <section className="panel-card">
           {error ? <p className="error" role="alert">{error}</p> : null}
           {notice ? <p className="hint">{notice}</p> : null}
@@ -318,7 +353,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                 <thead>
                   <tr>
                     <th className="freeze">Actions</th>
-                    {columns.map(([key, label]) => <th key={key}>{label}</th>)}
+                    {listColumns.map(([key, label]) => <th key={key}>{label}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -328,6 +363,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
+                          <button className="row-btn" type="button" onClick={() => { setViewing(row); setMode("view"); }}>View data</button>
                           {canDecide(row) ? (
                             <>
                               <button className="row-btn" type="button" onClick={() => decide(row, "approve")}>Approve</button>
@@ -339,14 +375,8 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                         {row.pendingAction === "delete" ? <p className="pending-note">Delete awaiting approval</p> : null}
                         {row.pendingAction === "ber" ? <p className="pending-note">For BER awaiting Super Admin</p> : null}
                       </td>
-                      {columns.map(([key]) => (
-                        <td key={key}>
-                          {key === "aging"
-                            ? agingLabel(row.dateAcquired)
-                            : key === "status" && row.status === "Pending" && row.pendingStatus
-                              ? `Pending · ${row.pendingStatus}`
-                              : row[key] || "—"}
-                        </td>
+                      {listColumns.map(([key]) => (
+                        <td key={key}>{cellValue(row, key)}</td>
                       ))}
                     </tr>
                   ))}
