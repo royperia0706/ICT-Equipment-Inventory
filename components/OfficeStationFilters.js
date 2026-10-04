@@ -50,6 +50,7 @@ export default function OfficeStationFilters({ locations = [], onFilter }) {
           ))}
         </select>
       </label>
+      <button type="button" className="filter-btn" onClick={() => onFilter?.({ office, station: selected, inventory, status })}>Filter</button>
       <label>
         Inventory
         <select value={inventory} onChange={(event) => setInventory(event.target.value)}>
@@ -68,16 +69,13 @@ export default function OfficeStationFilters({ locations = [], onFilter }) {
           ))}
         </select>
       </label>
-      <div className="filter-actions">
-        <p className="filter-note">
-          {selected
-            ? `${officeLabel(selected.unit)} · ${selected.name} · ${selected.classification}`
-            : office
-              ? `${stations.length} stations under ${officeLabel(office)}`
-              : `${stations.length} stations under all offices`}
-        </p>
-        <button type="button" onClick={() => onFilter?.({ office, station: selected, inventory, status })}>Filter</button>
-      </div>
+      <p className="filter-note">
+        {selected
+          ? `${officeLabel(selected.unit)} · ${selected.name} · ${selected.classification}`
+          : office
+            ? `${stations.length} stations under ${officeLabel(office)}`
+            : `${stations.length} stations under all offices`}
+      </p>
     </section>
   );
 }

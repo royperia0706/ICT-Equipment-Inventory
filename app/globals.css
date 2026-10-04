@@ -1011,8 +1011,9 @@ fieldset.form-grid {
 
 .dash-filters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px 16px;
+  align-items: end;
 }
 
 .dash-filters label {
@@ -1054,21 +1055,15 @@ fieldset.form-grid {
   gap: 6px;
 }
 
-.filter-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.filter-btn {
+  margin-top: 0;
+  height: 46px;
 }
 
 .filter-note {
+  grid-column: 1 / -1;
   margin: 0;
   color: var(--muted);
-}
-
-.filter-actions button {
-  margin-top: 0;
 }
 
 .filter-results { margin-top: 12px; }
