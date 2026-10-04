@@ -1,10 +1,57 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import OfficeStationFilters from "@/components/OfficeStationFilters";
+import { cellphoneColumns } from "@/lib/cellphone-fields";
+import { computerColumns } from "@/lib/computer-fields";
+import { displayColumns } from "@/lib/display-fields";
+import { internetColumns } from "@/lib/internet-fields";
 import { officeLabel } from "@/lib/location-choices";
+import { printerColumns } from "@/lib/printer-fields";
+import { radioColumns } from "@/lib/radio-fields";
+import { storageColumns } from "@/lib/storage-fields";
 import { activities, attention, provinces, summarize, totals } from "@/lib/dashboard";
+
+const columnsByKind = {
+  Computer: computerColumns,
+  Printer: printerColumns,
+  Internet: internetColumns,
+  Display: displayColumns,
+  Cellphone: cellphoneColumns,
+  "Handheld Radio": radioColumns,
+  Storage: storageColumns,
+};
+
+const hiddenDetailKeys = new Set(["id", "createdAt", "updatedAt", "kind", "unit", "office", "capacityValue", "capacityUnit", "ssdValue", "ssdUnit", "hddValue", "hddUnit"]);
+
+function kindLabel(kind) {
+  return kind === "Display" ? "Display/Projector" : (kind || "Equipment");
+}
+
+function recordKey(record) {
+  return record?.controlNumber || record?.id || "";
+}
+
+function detailRows(record) {
+  if (!record) return [];
+  const columns = columnsByKind[record.kind] || [];
+  const used = new Set();
+  const rows = [];
+  for (const [key, label] of columns) {
+    used.add(key);
+    const value = record[key];
+    if (value === undefined || value === null || value === "") continue;
+    rows.push([label, String(value)]);
+  }
+  for (const [key, value] of Object.entries(record)) {
+    if (used.has(key) || hiddenDetailKeys.has(key)) continue;
+    if (value === undefined || value === null || value === "" || typeof value === "object") continue;
+    const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
+    rows.push([label, String(value)]);
+  }
+  return rows;
+}
 
 const inventoryKind = {
   "/inventory/computer": "Computer",
@@ -61,47 +108,40 @@ function pieSlices(rows) {
   });
 }
 
-function Pie({ rows, label }) {
+function Pie({ rows, label, onView }) {
   const slices = pieSlices(rows);
-  if (!slices.length) {
-    return (
-      <ul className="pie-legend">
-        {(rows.length ? rows : [{ label: "No equipment yet", value: 0 }]).map((row) => (
-          <li key={row.label}>
-            <i style={{ background: "#C8CCD2" }} />
-            <span>{row.label}</span>
-            <strong>{number(row.value)}</strong>
-          </li>
-        ))}
-      </ul>
-    );
-  }
+  const legend = slices.length ? slices : (rows.length ? rows : [{ label: "No equipment yet", value: 0 }]);
   return (
     <div className="pie-block">
-      <svg className="donut" viewBox="0 0 200 200" role="img" aria-label={label}>
-        <g transform="rotate(-90 100 100)">
-          {slices.map((slice) => (
-            <circle
-              key={slice.label}
-              cx="100"
-              cy="100"
-              r={ringRadius}
-              fill="none"
-              stroke={slice.color}
-              strokeWidth="26"
-              strokeLinecap="butt"
-              strokeDasharray={slice.dasharray}
-              strokeDashoffset={slice.dashoffset}
-            >
-              <title>{`${slice.label}: ${number(slice.value)}`}</title>
-            </circle>
-          ))}
-        </g>
-      </svg>
+      <div className="pie-chart">
+        <svg className="donut" viewBox="0 0 200 200" role="img" aria-label={label}>
+          <g transform="rotate(-90 100 100)">
+            {slices.length ? slices.map((slice) => (
+              <circle
+                key={slice.label}
+                cx="100"
+                cy="100"
+                r={ringRadius}
+                fill="none"
+                stroke={slice.color}
+                strokeWidth="26"
+                strokeLinecap="butt"
+                strokeDasharray={slice.dasharray}
+                strokeDashoffset={slice.dashoffset}
+              >
+                <title>{`${slice.label}: ${number(slice.value)}`}</title>
+              </circle>
+            )) : (
+              <circle cx="100" cy="100" r={ringRadius} fill="none" stroke="#C8CCD2" strokeWidth="26" />
+            )}
+          </g>
+        </svg>
+        {onView ? <button type="button" className="pie-view" onClick={onView}>View</button> : null}
+      </div>
       <ul className="pie-legend">
-        {slices.map((slice) => (
+        {legend.map((slice) => (
           <li key={slice.label}>
-            <i style={{ background: slice.color }} />
+            <i style={{ background: slice.color || "#C8CCD2" }} />
             <span>{slice.label}</span>
             <strong>{number(slice.value)}</strong>
           </li>
@@ -146,6 +186,23 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
   const provinceRows = view?.provinces || provinces;
   const attentionRows = view?.attention || attention;
   const activityRows = view?.activities || activities;
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailKey, setDetailKey] = useState("");
+  const detail = filteredRecords.find((record) => recordKey(record) === detailKey) || filteredRecords[0] || null;
+
+  useEffect(() => {
+    if (!detailOpen) return undefined;
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setDetailOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [detailOpen]);
+
+  function openDetails() {
+    setDetailKey(recordKey(filteredRecords[0]));
+    setDetailOpen(true);
+  }
 
   return (
     <div className="dash">
@@ -210,7 +267,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
       <section className="split">
         <article className="panel-card">
           <h2>Equipment by status</h2>
-          <Pie rows={statusRows} label="Equipment by status" />
+          <Pie rows={statusRows} label="Equipment by status" onView={openDetails} />
         </article>
         <article className="panel-card">
           <h2>Equipment by province</h2>
@@ -243,6 +300,45 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
           ))}
         </ul>
       </section>
+
+      {detailOpen ? (
+        <div className="modal-back" onClick={() => setDetailOpen(false)}>
+          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="item-detail-title" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-head">
+              <h2 id="item-detail-title">Item details</h2>
+              <button type="button" className="ghost" onClick={() => setDetailOpen(false)}>Close</button>
+            </div>
+            {filteredRecords.length === 0 || !detail ? (
+              <p className="filter-empty">No items to view.</p>
+            ) : (
+              <>
+                <label>
+                  Item
+                  <select value={recordKey(detail)} onChange={(event) => setDetailKey(event.target.value)}>
+                    {filteredRecords.map((record) => (
+                      <option key={recordKey(record)} value={recordKey(record)}>
+                        {`${record.controlNumber || "No control number"} · ${kindLabel(record.kind)} · ${record.municipality || "Unassigned"}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <dl className="detail-grid">
+                  <div>
+                    <dt>Inventory</dt>
+                    <dd>{kindLabel(detail.kind)}</dd>
+                  </div>
+                  {detailRows(detail).map(([label, value]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

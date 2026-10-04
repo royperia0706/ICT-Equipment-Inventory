@@ -699,9 +699,76 @@ fieldset.form-grid {
   margin-bottom: 14px;
 }
 
-.pie-block svg {
+.pie-chart {
+  position: relative;
   width: 180px;
   height: 180px;
+}
+
+.pie-block svg,
+.pie-chart svg {
+  width: 180px;
+  height: 180px;
+}
+
+.pie-view {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 74px;
+  height: 74px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+}
+
+.modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(28, 43, 36, 0.45);
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 20px 22px 8px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-head h2 { margin: 0; }
+
+.modal-head button { margin-top: 0; }
+
+.modal-card label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+.modal-card select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 12px;
+  font: inherit;
 }
 
 .pie-legend {
