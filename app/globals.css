@@ -601,30 +601,30 @@ button:disabled { opacity: 0.6; cursor: wait; }
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 20px 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
 }
 
 .stat {
   background: var(--card);
   border: 1px solid var(--line);
-  border-top: 3px solid var(--ink);
-  padding: 14px 14px 12px;
+  border-top: 2px solid var(--ink);
+  padding: 6px 8px 5px;
 }
 
 .stat p {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .stat strong {
   display: block;
-  margin-top: 4px;
-  font-size: 18px;
+  margin-top: 2px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -936,7 +936,7 @@ fieldset.form-grid {
     z-index: 30;
     padding: 0;
   }
-  .stat-grid, .form-grid, .dense-form .form-grid { grid-template-columns: 1fr 1fr; }
+  .form-grid, .dense-form .form-grid { grid-template-columns: 1fr 1fr; }
   .split { grid-template-columns: 1fr; }
   .canvas { padding: 18px; }
   .app-title { font-size: 12px; }
