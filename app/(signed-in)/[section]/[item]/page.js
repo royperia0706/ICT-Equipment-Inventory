@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import CellphoneInventory from "@/components/CellphoneInventory";
 import ComputerInventory from "@/components/ComputerInventory";
 import DisplayInventory from "@/components/DisplayInventory";
 import InternetInventory from "@/components/InternetInventory";
@@ -9,13 +10,14 @@ import { listComputers } from "@/lib/computers";
 import { requireUser } from "@/lib/guard";
 import { listLocations } from "@/lib/locations";
 import { moduleFor } from "@/lib/navigation";
+import { listCellphones } from "@/lib/cellphones";
 import { listDisplays } from "@/lib/displays";
 import { listInternets } from "@/lib/internets";
 import { listPrinters } from "@/lib/printers";
 
 export default async function ItemPage({ params }) {
   const { section, item } = await params;
-  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector")) {
+  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector" || item === "cellphone")) {
     const user = await requireUser();
     let locations = [];
     try {
@@ -50,13 +52,22 @@ export default async function ItemPage({ params }) {
       }
       return <InternetInventory initial={internets} locations={locations} user={user} />;
     }
-    let displays = [];
-    try {
-      displays = await listDisplays(user);
-    } catch {
-      displays = [];
+    if (item === "display-projector") {
+      let displays = [];
+      try {
+        displays = await listDisplays(user);
+      } catch {
+        displays = [];
+      }
+      return <DisplayInventory initial={displays} locations={locations} user={user} />;
     }
-    return <DisplayInventory initial={displays} locations={locations} user={user} />;
+    let cellphones = [];
+    try {
+      cellphones = await listCellphones(user);
+    } catch {
+      cellphones = [];
+    }
+    return <CellphoneInventory initial={cellphones} locations={locations} user={user} />;
   }
   const page = moduleFor(section, item);
   if (!page) notFound();
