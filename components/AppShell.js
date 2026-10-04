@@ -49,8 +49,8 @@ export default function AppShell({ user, children }) {
     <div className={navOpen ? "shell nav-open" : "shell"}>
       <aside className="side">
         <div className="side-brand">
-          <span className="mark">ICT</span>
-          <strong>Equipment Inventory</strong>
+          <img className="brand-logo" src="/logo.jpg" alt="" />
+          <strong>PRO 4A - ICT Inventory Management System</strong>
         </div>
         <nav className="side-nav" aria-label="Main">
           {menu.map((item) =>
@@ -125,7 +125,7 @@ export default function AppShell({ user, children }) {
         <button className="icon-btn menu-btn" type="button" aria-label="Open menu" onClick={() => setNavOpen(true)}>
           <Icon name="menu" />
         </button>
-        <p className="app-title">ICT Equipment Inventory System</p>
+        <p className="app-title">PRO 4A - ICT Inventory Management System</p>
         <div className="app-tools">
           <div className="pop">
             <button

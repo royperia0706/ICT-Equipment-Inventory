@@ -13,8 +13,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  title: "ICT Equipment Inventory",
-  description: "Sign in to the ICT Equipment Inventory Management System.",
+  title: "PRO 4A - ICT Inventory Management System",
+  description: "Sign in to the PRO 4A - ICT Inventory Management System.",
+  icons: { icon: "/logo.jpg" },
 };
 
 export default function RootLayout({ children }) {

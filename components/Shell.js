@@ -3,9 +3,9 @@ export default function Shell({ children }) {
     <div className="stage">
       <aside className="brand">
         <div>
-          <div className="mark">ICT</div>
-          <p className="eyebrow">Equipment inventory</p>
-          <h1>Sign in to the equipment records.</h1>
+          <img className="brand-logo brand-logo-large" src="/logo.jpg" alt="" />
+          <p className="eyebrow">PRO 4A</p>
+          <h1>ICT Inventory Management System</h1>
           <p className="lede">
             Use the username and password assigned to your office or station.
           </p>
