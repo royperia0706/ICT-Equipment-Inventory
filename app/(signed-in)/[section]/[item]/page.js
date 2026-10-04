@@ -6,6 +6,7 @@ import InternetInventory from "@/components/InternetInventory";
 import ModuleView from "@/components/ModuleView";
 import PrinterInventory from "@/components/PrinterInventory";
 import RadioInventory from "@/components/RadioInventory";
+import StorageInventory from "@/components/StorageInventory";
 import { scopeLocations } from "@/lib/access";
 import { listComputers } from "@/lib/computers";
 import { requireUser } from "@/lib/guard";
@@ -16,10 +17,11 @@ import { listDisplays } from "@/lib/displays";
 import { listInternets } from "@/lib/internets";
 import { listPrinters } from "@/lib/printers";
 import { listRadios } from "@/lib/radios";
+import { listStorages } from "@/lib/storages";
 
 export default async function ItemPage({ params }) {
   const { section, item } = await params;
-  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector" || item === "cellphone" || item === "handheld-radio")) {
+  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector" || item === "cellphone" || item === "handheld-radio" || item === "storage")) {
     const user = await requireUser();
     let locations = [];
     try {
@@ -72,13 +74,22 @@ export default async function ItemPage({ params }) {
       }
       return <CellphoneInventory initial={cellphones} locations={locations} user={user} />;
     }
-    let radios = [];
-    try {
-      radios = await listRadios(user);
-    } catch {
-      radios = [];
+    if (item === "handheld-radio") {
+      let radios = [];
+      try {
+        radios = await listRadios(user);
+      } catch {
+        radios = [];
+      }
+      return <RadioInventory initial={radios} locations={locations} user={user} />;
     }
-    return <RadioInventory initial={radios} locations={locations} user={user} />;
+    let storages = [];
+    try {
+      storages = await listStorages(user);
+    } catch {
+      storages = [];
+    }
+    return <StorageInventory initial={storages} locations={locations} user={user} />;
   }
   const page = moduleFor(section, item);
   if (!page) notFound();
