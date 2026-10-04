@@ -8,6 +8,7 @@ import { listCellphones } from "@/lib/cellphones";
 import { listDisplays } from "@/lib/displays";
 import { listInternets } from "@/lib/internets";
 import { listPrinters } from "@/lib/printers";
+import { listRadios } from "@/lib/radios";
 
 export default async function HomePage() {
   const user = await requireUser();
@@ -15,8 +16,8 @@ export default async function HomePage() {
   let records = [];
   try {
     locations = scopeLocations(user, await listLocations());
-    const [computers, printers, internets, displays, cellphones] = await Promise.all([listComputers(user), listPrinters(user), listInternets(user), listDisplays(user), listCellphones(user)]);
-    records = [...computers, ...printers, ...internets, ...displays, ...cellphones];
+    const [computers, printers, internets, displays, cellphones, radios] = await Promise.all([listComputers(user), listPrinters(user), listInternets(user), listDisplays(user), listCellphones(user), listRadios(user)]);
+    records = [...computers, ...printers, ...internets, ...displays, ...cellphones, ...radios];
   } catch {
     locations = [];
     records = [];
