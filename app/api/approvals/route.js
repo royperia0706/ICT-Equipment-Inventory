@@ -1,12 +1,9 @@
+import { currentUser } from "@/lib/guard";
 import { decideEquipment } from "@/lib/review";
-import { getSession, json } from "@/lib/session";
-import { getUser, publicUser } from "@/lib/users";
+import { json } from "@/lib/session";
 
 async function actor() {
-  const session = await getSession();
-  if (session.step !== "verified" || !session.username) return null;
-  const user = await getUser(session.username);
-  return user ? publicUser(user) : null;
+  return currentUser();
 }
 
 export async function POST(request) {

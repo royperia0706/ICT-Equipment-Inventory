@@ -2,25 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { agingLabel, columnsWithAging } from "@/lib/aging";
+import { acquireYears, conditionsByStatus, statuses } from "@/lib/computer-fields";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 import {
   colorCapabilities,
   connectionTypes,
   printerAcquisitions,
   printerColumns,
-  printerConditions,
-  printerSections,
-  printerStatuses,
 } from "@/lib/printer-fields";
 
 const emptyForm = {
   printerType: "",
   brand: "",
   model: "",
+  yearModel: "",
   serialNumber: "",
-  assetTag: "",
   connectionType: "",
-  ipAddress: "",
   tonerInkType: "",
   colorCapability: "",
   province: "",
@@ -31,24 +28,68 @@ const emptyForm = {
   assignedUser: "",
   status: "",
   condition: "",
+  targetFixDate: "",
+  problemDetail: "",
+  dateAssessed: "",
+  reasonForBer: "",
+  yearMissing: "",
   modeOfAcquisition: "",
   dateAcquired: "",
   acquisitionCost: "",
   remarks: "",
 };
 
-function Field({ label, required, children }) {
+function yearOptions(current) {
+  const years = acquireYears();
+  const saved = String(current || "");
+  if (saved && !years.includes(saved)) return [saved, ...years];
+  return years;
+}
+
+function formFromRow(row) {
+  const status = statuses.includes(row.status) ? row.status : statuses.includes(row.pendingStatus) ? row.pendingStatus : "";
+  return {
+    ...emptyForm,
+    printerType: row.printerType || "",
+    brand: row.brand || "",
+    model: row.model || "",
+    yearModel: String(row.yearModel || "").slice(0, 4),
+    serialNumber: row.serialNumber || "",
+    connectionType: row.connectionType || "",
+    tonerInkType: row.tonerInkType || "",
+    colorCapability: row.colorCapability || "",
+    province: row.province || "",
+    municipality: row.municipality || "",
+    office: row.office || "",
+    section: row.section || "",
+    accountablePerson: row.accountablePerson || "",
+    assignedUser: row.assignedUser || "",
+    status,
+    condition: (conditionsByStatus[status] || []).includes(row.condition) ? row.condition : "",
+    targetFixDate: row.targetFixDate || "",
+    problemDetail: row.problemDetail || "",
+    dateAssessed: row.dateAssessed || "",
+    reasonForBer: row.reasonForBer || "",
+    yearMissing: row.yearMissing || "",
+    modeOfAcquisition: row.modeOfAcquisition || "",
+    dateAcquired: String(row.dateAcquired || "").slice(0, 4),
+    acquisitionCost: row.acquisitionCost || "",
+    remarks: row.remarks || "",
+  };
+}
+
+function Field({ label, required, wide, children }) {
   return (
-    <label>
+    <label className={wide ? "span-row" : undefined}>
       <span>{label}{required ? " *" : ""}</span>
       {children}
     </label>
   );
 }
 
-function Select({ name, value, onChange, options, disabled, required, blank = true }) {
+function Select({ name, value, onChange, options, disabled, required, blank = true, autoComplete = "off" }) {
   return (
-    <select name={name} value={value} onChange={onChange} disabled={disabled} required={required}>
+    <select name={name} value={value || ""} onChange={onChange} disabled={disabled} required={required} autoComplete={autoComplete}>
       {blank ? <option value="">--Select--</option> : null}
       {options.filter(Boolean).map((option) => {
         const item = typeof option === "string" ? { value: option, label: option } : option;
@@ -124,6 +165,10 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
 
   function update(event) {
     const { name, value } = event.target;
+    if (name === "status" || name === "printerStatus") {
+      setForm((current) => ({ ...current, status: value, condition: "" }));
+      return;
+    }
     if (name === "province") {
       const unit = officesIn(locations, regionsIn(locations)[0]).find((item) => officeLabel(item) === value);
       const stations = stationsIn(locations, unit);
@@ -147,8 +192,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
   }
 
   function editRow(row) {
-    const { pendingAction, pendingStatus, pendingBy, previousStatus, pendingPayload, kind, createdAt, updatedAt, id, controlNumber, ...fields } = row;
-    setForm({ ...emptyForm, ...fields, acquisitionCost: row.acquisitionCost || "" });
+    setForm(formFromRow(row));
     setEditingId(row.id);
     setBasicRequest(false);
     setControlNumber(row.controlNumber || "");
@@ -290,7 +334,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
           )}
         </section>
       ) : (
-        <form className="computer-form" onSubmit={onSubmit}>
+        <form key={editingId || "new-printer"} className="computer-form dense-form" autoComplete="off" onSubmit={onSubmit}>
           <section className="panel-card">
             <div className="section-head">
               <h2>Basic information</h2>
@@ -316,17 +360,14 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
               <Field label="Model" required>
                 <input name="model" value={form.model} onChange={update} required placeholder="Hal. LaserJet Pro M428fdw" />
               </Field>
+              <Field label="Year Model" required>
+                <Select name="yearModel" value={form.yearModel} onChange={update} options={yearOptions(form.yearModel)} required />
+              </Field>
               <Field label="Serial Number" required>
                 <input name="serialNumber" value={form.serialNumber} onChange={update} required />
               </Field>
-              <Field label="Asset Tag">
-                <input name="assetTag" value={form.assetTag} onChange={update} placeholder="Hal. PRT-001" />
-              </Field>
               <Field label="Connection Type" required>
                 <Select name="connectionType" value={form.connectionType} onChange={update} options={connectionTypes} required />
-              </Field>
-              <Field label="IP Address">
-                <input name="ipAddress" value={form.ipAddress} onChange={update} placeholder="Hal. 192.168.1.50" />
               </Field>
             </fieldset>
           </section>
@@ -344,7 +385,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
           </section>
 
           <section className="panel-card">
-            <h2>Location and accountability</h2>
+            <h2>User and Accountability</h2>
             <div className="form-grid">
               <Field label="Region" required>
                 <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
@@ -363,14 +404,14 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                   options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
                 />
               </Field>
-              <Field label="Section">
-                <Select name="section" value={form.section} onChange={update} options={printerSections} />
+              <Field label="Section" required>
+                <input name="section" value={form.section} onChange={update} required />
               </Field>
-              <Field label="Accountable Person" required>
-                <input name="accountablePerson" value={form.accountablePerson} onChange={update} required placeholder="Pangalan ng taong may pananagutan" />
+              <Field label="Specific User" required>
+                <input name="accountablePerson" value={form.accountablePerson} onChange={update} required placeholder="Pangalan ng specific user" />
               </Field>
-              <Field label="Assigned User">
-                <input name="assignedUser" value={form.assignedUser} onChange={update} placeholder="Pangalan ng gumagamit" />
+              <Field label="Assigned User" required>
+                <input name="assignedUser" value={form.assignedUser} onChange={update} required placeholder="Pangalan ng gumagamit" />
               </Field>
             </div>
           </section>
@@ -378,23 +419,65 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
           <section className="panel-card">
             <h2>Status and condition</h2>
             <div className="form-grid">
-              <Field label="Status" required>
-                <Select name="status" value={form.status} onChange={update} options={printerStatuses} required />
+              <Field label="Printer Status" required>
+                <Select name="printerStatus" value={form.status} onChange={update} options={statuses} required />
               </Field>
-              <Field label="Condition" required>
-                <Select name="condition" value={form.condition} onChange={update} options={printerConditions} required />
-              </Field>
+              {form.status && (conditionsByStatus[form.status] || []).length ? (
+                <Field label="Condition" required>
+                  <Select name="condition" value={form.condition} onChange={update} options={conditionsByStatus[form.status]} required />
+                </Field>
+              ) : null}
+              {form.status === "Unserviceable" ? (
+                <>
+                  <Field label="Date Assessed" required>
+                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} required />
+                  </Field>
+                  <Field label="Specify the printer's problem or defect." wide required>
+                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} required />
+                  </Field>
+                </>
+              ) : null}
+              {form.status === "Under Maintenance" ? (
+                <>
+                  <Field label="Target Date to be Fixed" required>
+                    <input name="targetFixDate" type="date" value={form.targetFixDate} onChange={update} required />
+                  </Field>
+                  <Field label="Specify the printer's problem or defect." wide required>
+                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} required />
+                  </Field>
+                </>
+              ) : null}
+              {form.status === "BER" ? (
+                <>
+                  <Field label="Date Assessed" required>
+                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} required />
+                  </Field>
+                  <Field label="Reason for BER" wide required>
+                    <textarea name="reasonForBer" rows={3} value={form.reasonForBer} onChange={update} required />
+                  </Field>
+                </>
+              ) : null}
+              {form.status === "Missing" ? (
+                <>
+                  <Field label="Year discovered missing" required>
+                    <Select name="yearMissing" value={form.yearMissing} onChange={update} options={yearOptions(form.yearMissing)} required />
+                  </Field>
+                  <Field label="Remarks" wide required>
+                    <textarea name="remarks" rows={3} value={form.remarks} onChange={update} required />
+                  </Field>
+                </>
+              ) : null}
             </div>
           </section>
 
           <section className="panel-card">
-            <h2>Acquisition and warranty</h2>
+            <h2>Acquisition</h2>
             <div className="form-grid">
               <Field label="Mode of Acquisition" required>
-                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={printerAcquisitions} required />
+                <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={form.modeOfAcquisition && !printerAcquisitions.includes(form.modeOfAcquisition) ? [form.modeOfAcquisition, ...printerAcquisitions] : printerAcquisitions} required />
               </Field>
-              <Field label="Date Acquired" required>
-                <input name="dateAcquired" type="date" value={form.dateAcquired} onChange={update} required />
+              <Field label="Year Acquired" required>
+                <Select name="dateAcquired" value={form.dateAcquired} onChange={update} options={yearOptions(form.dateAcquired)} required />
               </Field>
               <Field label="Acquisition Cost">
                 <input
@@ -412,12 +495,14 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
             </div>
           </section>
 
+          {form.status === "Missing" ? null : (
           <section className="panel-card">
             <h2>Remarks</h2>
             <Field label="Remarks">
               <textarea name="remarks" rows={3} value={form.remarks} onChange={update} placeholder="Mga isyu, kasaysayan ng pagkukumpuni, atbp." />
             </Field>
           </section>
+          )}
 
           {error ? <p className="error" role="alert">{error}</p> : null}
           <div className="computer-actions">

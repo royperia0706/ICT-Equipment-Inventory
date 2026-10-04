@@ -1,9 +1,10 @@
-import { getSession, json } from "@/lib/session";
+import { currentUser } from "@/lib/guard";
+import { json, setSession } from "@/lib/session";
 import { changeOwnPassword } from "@/lib/users";
 
 export async function POST(request) {
-  const session = await getSession();
-  if (session.step !== "verified" || !session.username) {
+  const signedIn = await currentUser();
+  if (!signedIn) {
     return json({ ok: false, error: "Sign in first." }, 401);
   }
   const body = await request.json().catch(() => ({}));
@@ -11,7 +12,8 @@ export async function POST(request) {
     return json({ ok: false, error: "The new passwords do not match." }, 400);
   }
   try {
-    await changeOwnPassword(session.username, body.currentPassword, body.newPassword);
+    const revision = await changeOwnPassword(signedIn.username, body.currentPassword, body.newPassword);
+    await setSession({ username: signedIn.username, step: "verified", revision });
     return json({ ok: true });
   } catch (error) {
     return json({ ok: false, error: error.message || "Could not change the password." }, error.status || 400);

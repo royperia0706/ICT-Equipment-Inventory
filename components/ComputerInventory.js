@@ -28,6 +28,7 @@ const emptyForm = {
   connectivity: "",
   brand: "",
   monitorBrand: "",
+  dateManufacture: "",
   model: "",
   serialNumber: "",
   processor: "",
@@ -88,6 +89,7 @@ function formFromRow(row) {
     connectivity: row.connectivity || emptyForm.connectivity,
     brand: row.brand || "",
     monitorBrand: row.monitorBrand || "",
+    dateManufacture: row.dateManufacture || "",
     model: row.model || "",
     serialNumber: row.serialNumber || "",
     processor: row.processor || "",
@@ -448,23 +450,26 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Equipment Type" required>
                 <Select name="equipmentType" value={form.equipmentType} onChange={update} options={equipmentTypes} required />
               </Field>
-              <Field label="Computer Name">
-                <input name="computerName" value={form.computerName} onChange={update} placeholder="hal. NPCS-UNIT-001" />
+              <Field label="Computer Name" required>
+                <input name="computerName" value={form.computerName} onChange={update} placeholder="hal. NPCS-UNIT-001" required />
               </Field>
-              <Field label="Type of Monitor">
-                <input name="display" value={form.display} onChange={update} placeholder="hal. LCD, LED" />
+              <Field label="Type of Monitor" required>
+                <input name="display" value={form.display} onChange={update} placeholder="hal. LCD, LED" required />
               </Field>
-              <Field label="Size">
-                <input name="size" value={form.size} onChange={update} placeholder="hal. 14-inch" />
+              <Field label="Size" required>
+                <input name="size" value={form.size} onChange={update} placeholder="hal. 14-inch" required />
               </Field>
-              <Field label="Connectivity">
-                <Select name="connectivity" value={form.connectivity} onChange={update} options={connectivityOptions} />
+              <Field label="Connectivity" required>
+                <Select name="connectivity" value={form.connectivity} onChange={update} options={connectivityOptions} required />
               </Field>
               <Field label="System Unit/CPU Brand" required>
                 <input name="brand" value={form.brand} onChange={update} required />
               </Field>
-              <Field label="Monitor Brand">
-                <input name="monitorBrand" value={form.monitorBrand} onChange={update} />
+              <Field label="Monitor Brand" required>
+                <input name="monitorBrand" value={form.monitorBrand} onChange={update} required />
+              </Field>
+              <Field label="Date Manufacture" required>
+                <input name="dateManufacture" type="date" value={form.dateManufacture} onChange={update} required />
               </Field>
               <Field label="Model" required>
                 <input name="model" value={form.model} onChange={update} required />
@@ -478,11 +483,11 @@ export default function ComputerInventory({ initial = [], locations = [], user =
           <section className="panel-card">
             <h2>Computer specifications</h2>
             <div className="form-grid">
-              <Field label="Processor">
-                <input name="processor" value={form.processor} onChange={update} placeholder="hal. Intel Core i5" />
+              <Field label="Processor" required>
+                <input name="processor" value={form.processor} onChange={update} placeholder="hal. Intel Core i5" required />
               </Field>
-              <Field label="Frequency">
-                <input name="frequency" value={form.frequency} onChange={update} placeholder="hal. 2.4 GHz" />
+              <Field label="Frequency" required>
+                <input name="frequency" value={form.frequency} onChange={update} placeholder="hal. 2.4 GHz" required />
               </Field>
               <Field label="Number of Cores">
                 <input name="numberOfCores" value={form.numberOfCores} onChange={update} />
@@ -490,50 +495,50 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Logical Processor">
                 <input name="logicalProcessor" value={form.logicalProcessor} onChange={update} />
               </Field>
-              <Field label="RAM (GB)">
-                <Select name="ram" value={form.ram} onChange={update} options={ramSizes.includes(form.ram) || !form.ram ? ramSizes : [form.ram, ...ramSizes]} />
+              <Field label="RAM (GB)" required>
+                <Select name="ram" value={form.ram} onChange={update} options={ramSizes.includes(form.ram) || !form.ram ? ramSizes : [form.ram, ...ramSizes]} required />
               </Field>
-              <Field label="SSD Storage">
+              <Field label="SSD Storage" required>
                 <span className="storage-row">
-                  <input name="ssdValue" type="number" min="0" value={form.ssdValue} onChange={update} placeholder="hal. 512" />
+                  <input name="ssdValue" type="number" min="0" value={form.ssdValue} onChange={update} placeholder="hal. 0" required />
                   <Select name="ssdUnit" value={form.ssdUnit} onChange={update} options={storageUnits} blank={false} />
                 </span>
               </Field>
-              <Field label="HDD Storage">
+              <Field label="HDD Storage" required>
                 <span className="storage-row">
-                  <input name="hddValue" type="number" min="0" value={form.hddValue} onChange={update} placeholder="hal. 1" />
+                  <input name="hddValue" type="number" min="0" value={form.hddValue} onChange={update} placeholder="hal. 0" required />
                   <Select name="hddUnit" value={form.hddUnit} onChange={update} options={storageUnits} blank={false} />
                 </span>
               </Field>
-              <Field label="Video Card">
-                <input name="gpu" value={form.gpu} onChange={update} placeholder="hal. NVIDIA RTX 3050" />
+              <Field label="Video Card" required>
+                <input name="gpu" value={form.gpu} onChange={update} placeholder="hal. NVIDIA RTX 3050" required />
               </Field>
-              <Field label="Capacity">
-                <input name="videoCapacity" value={form.videoCapacity} onChange={update} placeholder="hal. 4 GB" />
+              <Field label="Capacity" required>
+                <input name="videoCapacity" value={form.videoCapacity} onChange={update} placeholder="hal. 4 GB" required />
               </Field>
-              <Field label="Operating System">
-                <input name="os" value={form.os} onChange={update} placeholder="hal. Windows 11 Pro" />
+              <Field label="Operating System" required>
+                <input name="os" value={form.os} onChange={update} placeholder="hal. Windows 11 Pro" required />
               </Field>
-              <Field label="Status">
-                <Select name="osStatus" value={form.osStatus} onChange={update} options={licenseStatuses} />
+              <Field label="Status" required>
+                <Select name="osStatus" value={form.osStatus} onChange={update} options={licenseStatuses} required />
               </Field>
-              <Field label="Anti-Virus/End Point Security">
-                <input name="antivirus" value={form.antivirus} onChange={update} />
+              <Field label="Anti-Virus/End Point Security" required>
+                <input name="antivirus" value={form.antivirus} onChange={update} required />
               </Field>
-              <Field label="Status">
-                <Select name="antivirusStatus" value={form.antivirusStatus} onChange={update} options={licenseStatuses} />
+              <Field label="Status" required>
+                <Select name="antivirusStatus" value={form.antivirusStatus} onChange={update} options={licenseStatuses} required />
               </Field>
-              <Field label="Office Productivity Software">
-                <input name="officeSoftware" value={form.officeSoftware} onChange={update} placeholder="hal. Microsoft 365" />
+              <Field label="Office Productivity Software" required>
+                <input name="officeSoftware" value={form.officeSoftware} onChange={update} placeholder="hal. Microsoft 365" required />
               </Field>
-              <Field label="Status">
-                <Select name="officeStatus" value={form.officeStatus} onChange={update} options={licenseStatuses} />
+              <Field label="Status" required>
+                <Select name="officeStatus" value={form.officeStatus} onChange={update} options={licenseStatuses} required />
               </Field>
             </div>
           </section>
 
           <section className="panel-card">
-            <h2>Location and accountability</h2>
+            <h2>User and Accountability</h2>
             <div className="form-grid">
               <Field label="Region" required>
                 <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
@@ -552,17 +557,17 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                   disabled={stationOptions.length <= 1}
                 />
               </Field>
-              <Field label="Section">
-                <input name="section" value={form.section} onChange={update} />
+              <Field label="Section" required>
+                <input name="section" value={form.section} onChange={update} required />
               </Field>
-              <Field label="Specific End User">
-                <input name="specificEndUser" value={form.specificEndUser} onChange={update} placeholder="Pangalan ng end user" />
+              <Field label="Specific End User" required>
+                <input name="specificEndUser" value={form.specificEndUser} onChange={update} placeholder="Pangalan ng end user" required />
               </Field>
               <Field label="Assignment Status" required>
                 <Select name="assignmentStatus" value={form.assignmentStatus} onChange={update} options={form.assignmentStatus && !assignmentStatuses.includes(form.assignmentStatus) ? [form.assignmentStatus, ...assignmentStatuses] : assignmentStatuses} required />
               </Field>
-              <Field label="Accountable Person">
-                <input name="accountablePerson" value={form.accountablePerson} onChange={update} placeholder="Pangalan ng taong may pananagutan" />
+              <Field label="Accountable Person" required>
+                <input name="accountablePerson" value={form.accountablePerson} onChange={update} placeholder="Pangalan ng taong may pananagutan" required />
               </Field>
             </div>
           </section>
@@ -580,41 +585,41 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               ) : null}
               {form.status === "Unserviceable" ? (
                 <>
-                  <Field label="Date Assessed">
-                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} />
+                  <Field label="Date Assessed" required>
+                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} required />
                   </Field>
-                  <Field label="Specify the computer's problem or defect." wide>
-                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} />
+                  <Field label="Specify the computer's problem or defect." wide required>
+                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} required />
                   </Field>
                 </>
               ) : null}
               {form.status === "Under Maintenance" ? (
                 <>
-                  <Field label="Target Date to be Fixed">
-                    <input name="targetFixDate" type="date" value={form.targetFixDate} onChange={update} />
+                  <Field label="Target Date to be Fixed" required>
+                    <input name="targetFixDate" type="date" value={form.targetFixDate} onChange={update} required />
                   </Field>
-                  <Field label="Specify the computer's problem or defect." wide>
-                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} />
+                  <Field label="Specify the computer's problem or defect." wide required>
+                    <textarea className="problem-field" name="problemDetail" rows={4} value={form.problemDetail} onChange={update} required />
                   </Field>
                 </>
               ) : null}
               {form.status === "BER" ? (
                 <>
-                  <Field label="Date Assessed">
-                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} />
+                  <Field label="Date Assessed" required>
+                    <input name="dateAssessed" type="date" value={form.dateAssessed} onChange={update} required />
                   </Field>
-                  <Field label="Reason for BER" wide>
-                    <textarea name="reasonForBer" rows={3} value={form.reasonForBer} onChange={update} />
+                  <Field label="Reason for BER" wide required>
+                    <textarea name="reasonForBer" rows={3} value={form.reasonForBer} onChange={update} required />
                   </Field>
                 </>
               ) : null}
               {form.status === "Missing" ? (
                 <>
-                  <Field label="Year discovered missing">
-                    <Select name="yearMissing" value={form.yearMissing} onChange={update} options={form.yearMissing && !acquireYears().includes(String(form.yearMissing)) ? [String(form.yearMissing), ...acquireYears()] : acquireYears()} />
+                  <Field label="Year discovered missing" required>
+                    <Select name="yearMissing" value={form.yearMissing} onChange={update} options={form.yearMissing && !acquireYears().includes(String(form.yearMissing)) ? [String(form.yearMissing), ...acquireYears()] : acquireYears()} required />
                   </Field>
-                  <Field label="Remarks" wide>
-                    <textarea name="remarks" rows={3} value={form.remarks} onChange={update} />
+                  <Field label="Remarks" wide required>
+                    <textarea name="remarks" rows={3} value={form.remarks} onChange={update} required />
                   </Field>
                 </>
               ) : null}
@@ -627,12 +632,12 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Mode of Acquisition" required>
                 <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={form.modeOfAcquisition && !acquisitions.includes(form.modeOfAcquisition) ? [form.modeOfAcquisition, ...acquisitions] : acquisitions} required />
               </Field>
-              <Field label="Dedicated Use For">
-                <Select name="dedicatedUse" value={form.dedicatedUse} onChange={update} options={form.dedicatedUse && !dedicatedUses.includes(form.dedicatedUse) ? [form.dedicatedUse, ...dedicatedUses] : dedicatedUses} />
+              <Field label="Dedicated Use For" required>
+                <Select name="dedicatedUse" value={form.dedicatedUse} onChange={update} options={form.dedicatedUse && !dedicatedUses.includes(form.dedicatedUse) ? [form.dedicatedUse, ...dedicatedUses] : dedicatedUses} required />
               </Field>
               {form.dedicatedUse === "Others" ? (
-                <Field label="Others (Please Specify:)">
-                  <input name="dedicatedUseOthers" value={form.dedicatedUseOthers} onChange={update} placeholder="Ilagay ang detalye..." />
+                <Field label="Others (Please Specify:)" required>
+                  <input name="dedicatedUseOthers" value={form.dedicatedUseOthers} onChange={update} placeholder="Ilagay ang detalye..." required />
                 </Field>
               ) : null}
               <Field label="Year Acquired" required>

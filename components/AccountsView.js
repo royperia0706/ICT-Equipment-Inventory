@@ -43,6 +43,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [issued, setIssued] = useState(null);
   const manager = canManage(user);
   const region = regionsIn(locations)[0] || "PRO 4A - CALABARZON";
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
@@ -172,6 +173,35 @@ export default function AccountsView({ accounts = [], user = null, locations = [
     setRows((current) => current.filter((row) => row.username !== account.username));
   }
 
+  function statusText(account) {
+    if (account.pendingAction === "edit") {
+      return `Pending · edit to ${account.pendingStation || account.station} (${account.pendingAccess || account.access})`;
+    }
+    if (account.pendingAction) return `Pending · ${account.pendingAction}`;
+    if (account.blocked) return "Blocked";
+    if (account.mustChangePassword) return "Password reset";
+    return "Active";
+  }
+
+  async function unblock(account) {
+    if (!window.confirm(`Unblock ${account.username}? The password will be reset, and they must choose a new one at the next sign-in.`)) return;
+    setError("");
+    setNotice("");
+    setIssued(null);
+    const response = await fetch("/api/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: account.username, action: "unblock" }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(data.error || "Could not unblock this account.");
+      return;
+    }
+    applyResult(data);
+    setIssued({ username: account.username, password: data.temporaryPassword });
+  }
+
   async function decide(account, decision) {
     setError("");
     setNotice("");
@@ -210,6 +240,11 @@ export default function AccountsView({ accounts = [], user = null, locations = [
         <section className="panel-card">
           {error ? <p className="error" role="alert">{error}</p> : null}
           {notice ? <p className="hint">{notice}</p> : null}
+          {issued ? (
+            <p className="banner" role="status">
+              {issued.username} is unblocked. Temporary password: <strong>{issued.password}</strong>. They must set a new password at the next sign-in.
+            </p>
+          ) : null}
           {rows.length === 0 ? (
             <p className="hint">No accounts are loaded yet.</p>
           ) : (
@@ -234,6 +269,9 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                           {canChange(user, account) ? (
                             <div className="row-actions">
                               <button className="row-btn" type="button" onClick={() => openEdit(account)}>Edit</button>
+                              {account.blocked ? (
+                                <button className="row-btn" type="button" onClick={() => unblock(account)}>Unblock</button>
+                              ) : null}
                               {account.username !== user.username && account.role === "super-admin" ? (
                                 <button className="row-btn danger" type="button" onClick={() => remove(account)}>Delete</button>
                               ) : null}
@@ -248,7 +286,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                           {account.pendingAction ? <p className="pending-note">Pending Super Admin approval</p> : null}
                         </td>
                       ) : null}
-                      <td>{account.pendingAction === "edit" ? `Pending · edit to ${account.pendingStation || account.station} (${account.pendingAccess || account.access})` : account.pendingAction ? `Pending · ${account.pendingAction}` : "Active"}</td>
+                      <td>{statusText(account)}</td>
                       <td>{account.displayName}</td>
                       <td>{account.classification}</td>
                       <td>{account.username}</td>

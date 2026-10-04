@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
+import { formatClock } from "@/lib/lockout";
 
 export default function AuthScreen() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [wait, setWait] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!wait) return undefined;
+    const timer = setInterval(() => setWait((seconds) => Math.max(0, seconds - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [wait]);
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -26,11 +34,12 @@ export default function AuthScreen() {
     setBusy(false);
 
     if (!response.ok || !data.ok) {
+      setWait(Number(data.retryAfter) || 0);
       setError(data.error || "Sign-in failed.");
       return;
     }
 
-    router.push("/home");
+    router.push(data.step === "reset-password" ? "/reset-password" : "/home");
     router.refresh();
   }
 
@@ -48,8 +57,8 @@ export default function AuthScreen() {
             Password
             <input name="password" type="password" autoComplete="current-password" />
           </label>
-          {error ? <p className="error" role="alert">{error}</p> : null}
-          <button type="submit" disabled={busy}>{busy ? "Please wait…" : "Sign in"}</button>
+          {error ? <p className="error" role="alert">{wait > 0 ? `Too many failed attempts. Try again in ${formatClock(wait)}.` : error}</p> : null}
+          <button type="submit" disabled={busy || wait > 0}>{busy ? "Please wait…" : "Sign in"}</button>
         </form>
       </section>
     </Shell>

@@ -1,11 +1,9 @@
-import { getSession, json } from "@/lib/session";
-import { addAccount, decideAccount, editAccount, getUser, publicUser, removeAccount } from "@/lib/users";
+import { currentUser } from "@/lib/guard";
+import { json } from "@/lib/session";
+import { addAccount, decideAccount, editAccount, removeAccount, unblockAccount } from "@/lib/users";
 
 async function actor() {
-  const session = await getSession();
-  if (session.step !== "verified" || !session.username) return null;
-  const user = await getUser(session.username);
-  return user ? publicUser(user) : null;
+  return currentUser();
 }
 
 function fail(error) {
@@ -17,6 +15,10 @@ export async function POST(request) {
   if (!user) return json({ ok: false, error: "Sign in first." }, 401);
   const body = await request.json().catch(() => ({}));
   try {
+    if (body.action === "unblock") {
+      const result = await unblockAccount(user, body.username);
+      return json({ ok: true, ...result });
+    }
     if (body.decision) {
       const result = await decideAccount(user, body.username, body.decision);
       return json({ ok: true, ...result });

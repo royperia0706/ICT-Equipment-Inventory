@@ -1,6 +1,6 @@
 import { clearLock, inspectLock, registerFailure } from "@/lib/lockout";
 import { json, setSession } from "@/lib/session";
-import { authenticate, normalizeUsername } from "@/lib/users";
+import { normalizeUsername, signIn } from "@/lib/users";
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
@@ -18,14 +18,14 @@ export async function POST(request) {
     );
   }
 
-  let user = null;
+  let result = null;
   try {
-    user = await authenticate(username, body.password);
+    result = await signIn(username, body.password);
   } catch (error) {
     return json({ ok: false, error: error.message }, 503);
   }
 
-  if (!user) {
+  if (!result) {
     const failure = registerFailure(username);
     return json(
       {
@@ -39,7 +39,21 @@ export async function POST(request) {
     );
   }
 
+  if (!result.ok) {
+    return json(
+      {
+        ok: false,
+        error: result.error,
+        code: result.code,
+        retryAfter: result.retryAfter ?? 0,
+        remainingAttempts: result.remainingAttempts,
+      },
+      result.status
+    );
+  }
+
   clearLock(username);
-  await setSession({ username: user.username, step: "verified" });
-  return json({ ok: true, step: "verified", ...user });
+  const step = result.mustChangePassword ? "reset-password" : "verified";
+  await setSession({ username: result.user.username, step, revision: result.revision || 0 });
+  return json({ ok: true, step, ...result.user });
 }

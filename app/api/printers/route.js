@@ -1,14 +1,11 @@
 import { applyScope, inScope } from "@/lib/access";
 import { getPrinter, listPrinters, previewPrinterNumber } from "@/lib/printers";
 import { requestDelete, saveEquipment } from "@/lib/review";
-import { getSession, json } from "@/lib/session";
-import { getUser, publicUser } from "@/lib/users";
+import { currentUser } from "@/lib/guard";
+import { json } from "@/lib/session";
 
 async function actor() {
-  const session = await getSession();
-  if (session.step !== "verified" || !session.username) return null;
-  const user = await getUser(session.username);
-  return user ? publicUser(user) : null;
+  return currentUser();
 }
 
 function fail(error) {
