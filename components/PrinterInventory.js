@@ -292,7 +292,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                 <thead>
                   <tr>
                     {columns.map(([key, label]) => <th key={key}>{label}</th>)}
-                    <th className="freeze end">Actions</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -307,7 +307,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                               : row[key] || "—"}
                         </td>
                       ))}
-                      <td className="freeze end">
+                      <td>
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           {user?.role === "encoder" ? null : (

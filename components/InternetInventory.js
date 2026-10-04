@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { acquireYears } from "@/lib/computer-fields";
-import { internetColumns, internetStatuses } from "@/lib/internet-fields";
+import { internetColumns, internetStatuses, wifiCapabilities } from "@/lib/internet-fields";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 const emptyForm = {
@@ -10,6 +10,8 @@ const emptyForm = {
   provider: "",
   connectionType: "",
   speed: "",
+  wifiCapability: "",
+  location: "",
   yearSubscribed: "",
   monthlySubscription: "",
   ipAddress: "",
@@ -35,6 +37,8 @@ function formFromRow(row) {
     provider: row.provider || "",
     connectionType: row.connectionType || "",
     speed: row.speed || "",
+    wifiCapability: wifiCapabilities.includes(row.wifiCapability) ? row.wifiCapability : "",
+    location: row.location || "",
     yearSubscribed: String(row.yearSubscribed || "").slice(0, 4),
     monthlySubscription: row.monthlySubscription || "",
     ipAddress: row.ipAddress || "",
@@ -255,7 +259,7 @@ export default function InternetInventory({ initial = [], locations = [], user =
                 <thead>
                   <tr>
                     {columns.map(([key, label]) => <th key={key}>{label}</th>)}
-                    <th className="freeze end">Actions</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -268,7 +272,7 @@ export default function InternetInventory({ initial = [], locations = [], user =
                             : row[key] || "—"}
                         </td>
                       ))}
-                      <td className="freeze end">
+                      <td>
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           {user?.role === "encoder" ? null : (
@@ -337,6 +341,12 @@ export default function InternetInventory({ initial = [], locations = [], user =
               </Field>
               <Field label="Speed" required>
                 <input name="speed" value={form.speed} onChange={update} required placeholder="e.g. 100 Mbps" />
+              </Field>
+              <Field label="Wifi Capability" required>
+                <Select name="wifiCapability" value={form.wifiCapability} onChange={update} options={wifiCapabilities} required />
+              </Field>
+              <Field label="Location (Office)" required>
+                <input name="location" value={form.location} onChange={update} required placeholder="Office" />
               </Field>
               <Field label="Year Subscribed" required>
                 <Select name="yearSubscribed" value={form.yearSubscribed} onChange={update} options={yearOptions(form.yearSubscribed)} required />

@@ -393,7 +393,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                 <thead>
                   <tr>
                     {listColumns.map(([key, label]) => <th key={key}>{label}</th>)}
-                    <th className="freeze end">Actions</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -402,7 +402,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                       {listColumns.map(([key]) => (
                         <td key={key}>{cellValue(row, key)}</td>
                       ))}
-                      <td className="freeze end">
+                      <td>
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           {user?.role === "encoder" ? null : (
