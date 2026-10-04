@@ -287,11 +287,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
   }
 
   async function removeRow(row) {
-    const pendingDelete = user?.role === "encoder";
-    const question = pendingDelete
-      ? `Submit ${row.controlNumber} for deletion? An Assistant Admin or Super Admin must approve it.`
-      : `Delete ${row.controlNumber}?`;
-    if (!window.confirm(question)) return;
+    if (!window.confirm(`Delete ${row.controlNumber}?`)) return;
     setError("");
     setNotice("");
     const response = await fetch(`/api/computers?id=${encodeURIComponent(row.id)}`, { method: "DELETE" });
@@ -406,7 +402,9 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                       <td className="freeze">
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
-                          <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
+                          {user?.role === "encoder" ? null : (
+                            <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
+                          )}
                           <button className="row-btn" type="button" onClick={() => { setViewing(row); setMode("view"); }}>View data</button>
                           {canDecide(row) ? (
                             <>
@@ -446,6 +444,23 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             <fieldset className="form-grid" disabled={Boolean(editingId) && user?.role === "encoder" && !basicRequest}>
               <Field label="Control Number" required>
                 <input value={controlNumber} disabled />
+              </Field>
+              <Field label="Region" required>
+                <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
+              </Field>
+              <Field label="Office" required>
+                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
+              </Field>
+              <Field label="Station" required>
+                <Select
+                  name="municipality"
+                  value={form.municipality}
+                  onChange={update}
+                  required
+                  blank={stationOptions.length !== 1}
+                  options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
+                  disabled={stationOptions.length <= 1}
+                />
               </Field>
               <Field label="Equipment Type" required>
                 <Select name="equipmentType" value={form.equipmentType} onChange={update} options={equipmentTypes} required />
@@ -540,23 +555,6 @@ export default function ComputerInventory({ initial = [], locations = [], user =
           <section className="panel-card">
             <h2>User and Accountability</h2>
             <div className="form-grid">
-              <Field label="Region" required>
-                <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
-              </Field>
-              <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
-              </Field>
-              <Field label="Station" required>
-                <Select
-                  name="municipality"
-                  value={form.municipality}
-                  onChange={update}
-                  required
-                  blank={stationOptions.length !== 1}
-                  options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
-                  disabled={stationOptions.length <= 1}
-                />
-              </Field>
               <Field label="Section" required>
                 <input name="section" value={form.section} onChange={update} required />
               </Field>

@@ -201,11 +201,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
   }
 
   async function removeRow(row) {
-    const pendingDelete = user?.role === "encoder";
-    const question = pendingDelete
-      ? `Submit ${row.controlNumber} for deletion? An Assistant Admin or Super Admin must approve it.`
-      : `Delete ${row.controlNumber}?`;
-    if (!window.confirm(question)) return;
+    if (!window.confirm(`Delete ${row.controlNumber}?`)) return;
     setError("");
     setNotice("");
     const response = await fetch(`/api/printers?id=${encodeURIComponent(row.id)}`, { method: "DELETE" });
@@ -305,7 +301,9 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                       <td className="freeze">
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
-                          <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
+                          {user?.role === "encoder" ? null : (
+                            <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
+                          )}
                           {canDecide(row) ? (
                             <>
                               <button className="row-btn" type="button" onClick={() => decide(row, "approve")}>Approve</button>
@@ -351,6 +349,23 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
               <Field label="Control Number" required>
                 <input value={controlNumber} disabled />
               </Field>
+              <Field label="Region" required>
+                <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
+              </Field>
+              <Field label="Office" required>
+                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
+              </Field>
+              <Field label="Station" required>
+                <Select
+                  name="municipality"
+                  value={form.municipality}
+                  onChange={update}
+                  required
+                  blank={stationOptions.length !== 1}
+                  disabled={stationOptions.length <= 1}
+                  options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
+                />
+              </Field>
               <Field label="Printer Type" required>
                 <input name="printerType" value={form.printerType} onChange={update} required placeholder="Ilagay ang uri ng printer" />
               </Field>
@@ -387,23 +402,6 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
           <section className="panel-card">
             <h2>User and Accountability</h2>
             <div className="form-grid">
-              <Field label="Region" required>
-                <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
-              </Field>
-              <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
-              </Field>
-              <Field label="Station" required>
-                <Select
-                  name="municipality"
-                  value={form.municipality}
-                  onChange={update}
-                  required
-                  blank={stationOptions.length !== 1}
-                  disabled={stationOptions.length <= 1}
-                  options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
-                />
-              </Field>
               <Field label="Section" required>
                 <input name="section" value={form.section} onChange={update} required />
               </Field>
