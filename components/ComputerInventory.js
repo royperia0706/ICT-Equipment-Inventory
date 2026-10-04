@@ -1,5 +1,6 @@
 "use client";
 
+import ChangeNotes from "@/components/ChangeNotes";
 import { useEffect, useMemo, useState } from "react";
 import {
   acquisitions,
@@ -225,19 +226,19 @@ export default function ComputerInventory({ initial = [], locations = [], user =
   ];
 
   function canDecide(row) {
-    if (!user || !row?.pendingAction) return false;
-    if (user.role === "super-admin") return true;
-    if (row.pendingAction === "ber") return false;
-    return user.role === "assistant-admin";
+    if (user?.role !== "super-admin" || !row) return false;
+    return Boolean(row.pendingAction) || row.editRequest === "pending";
   }
 
   function needsApproval() {
     const ber = /^(for\s*ber|ber)$/i.test(form.status) || /^(for\s*ber|ber)$/i.test(form.condition);
     if (ber && user?.role !== "super-admin") return true;
-    return Boolean(editingId) && user?.role === "encoder";
+    return Boolean(editingId) && user?.role !== "super-admin";
   }
 
   const title = mode === "edit" ? "Edit computer equipment" : mode === "add" ? "Add computer equipment" : mode === "view" ? "Computer details" : "Computer";
+  const editingRow = rows.find((row) => row.id === editingId) || null;
+  const fieldsLocked = Boolean(editingId) && user?.role !== "super-admin" && !editingRow?.editGranted;
 
   function cellValue(row, key) {
     if (key === "aging") return agingLabel(row.dateAcquired);
@@ -304,13 +305,13 @@ export default function ComputerInventory({ initial = [], locations = [], user =
     setRows((current) => current.filter((item) => item.id !== row.id));
   }
 
-  async function decide(row, decision) {
+  async function decide(row, decision, target) {
     setError("");
     setNotice("");
     const response = await fetch("/api/approvals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ equipment: "computer", id: row.id, decision }),
+      body: JSON.stringify({ equipment: "computer", id: row.id, decision, target }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -323,6 +324,30 @@ export default function ComputerInventory({ initial = [], locations = [], user =
     }
     if (data.record) {
       setRows((current) => current.map((item) => (item.id === data.record.id ? data.record : item)));
+    }
+  }
+
+  async function requestEdit() {
+    setError("");
+    setNotice("");
+    setBusy(true);
+    try {
+      const response = await fetch("/api/computers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingId, requestEditAccess: true }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.computer) {
+        setError(data.error || "Could not request edit access.");
+        return;
+      }
+      setRows((current) => current.map((item) => (item.id === data.computer.id ? data.computer : item)));
+      setNotice(data.message || "");
+    } catch {
+      setError("Could not request edit access.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -409,14 +434,22 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                             <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
                           )}
                           <button className="row-btn" type="button" onClick={() => { setViewing(row); setMode("view"); }}>View data</button>
-                          {canDecide(row) ? (
+                          {user?.role === "super-admin" && row.editRequest === "pending" ? (
                             <>
-                              <button className="row-btn" type="button" onClick={() => decide(row, "approve")}>Approve</button>
-                              <button className="row-btn danger" type="button" onClick={() => decide(row, "reject")}>Reject</button>
+                              <button className="row-btn" type="button" onClick={() => decide(row, "approve", "edit-request")}>Accept edit</button>
+                              <button className="row-btn danger" type="button" onClick={() => decide(row, "reject", "edit-request")}>Reject edit</button>
+                            </>
+                          ) : null}
+                          {user?.role === "super-admin" && row.pendingAction ? (
+                            <>
+                              <button className="row-btn" type="button" onClick={() => decide(row, "approve", "changes")}>Approve</button>
+                              <button className="row-btn danger" type="button" onClick={() => decide(row, "reject", "changes")}>Reject</button>
                             </>
                           ) : null}
                         </div>
-                        {row.pendingAction === "edit" ? <p className="pending-note">Edit awaiting approval</p> : null}
+                        {row.editRequest === "pending" ? <p className="pending-note">Edit request awaiting Super Admin</p> : null}
+                        {row.pendingAction === "edit" ? <p className="pending-note">Changes awaiting Super Admin</p> : null}
+                        <ChangeNotes record={row} />
                         {row.pendingAction === "delete" ? <p className="pending-note">Delete awaiting approval</p> : null}
                         {row.pendingAction === "ber" ? <p className="pending-note">For BER awaiting Super Admin</p> : null}
                       </td>
@@ -432,16 +465,16 @@ export default function ComputerInventory({ initial = [], locations = [], user =
           <section className="panel-card">
             <div className="section-head">
               <h2>Basic information</h2>
-              {editingId && user?.role === "encoder" ? (
-                <button className="ghost" type="button" disabled={basicRequest} onClick={() => setBasicRequest(true)}>
-                  {basicRequest ? "Edit requested" : "Request for edit"}
+              {editingId && user?.role !== "super-admin" && !editingRow?.editGranted ? (
+                <button className="ghost" type="button" disabled={editingRow?.editRequest === "pending" || busy} onClick={requestEdit}>
+                  {editingRow?.editRequest === "pending" ? "Edit requested" : "Request Edit"}
                 </button>
               ) : null}
             </div>
-            {editingId && user?.role === "encoder" ? (
-              <p className="hint">{basicRequest ? "This change stays pending until an Assistant Admin or Super Admin approves it." : "Basic information is locked so the saved record is not overwritten."}</p>
+            {editingId && user?.role !== "super-admin" ? (
+              <p className="hint">{editingRow?.editGranted ? "Other fields are open. Saving still waits for Super Admin approval." : editingRow?.editRequest === "pending" ? "Edit request is waiting for a Super Admin. Only Status can be changed until it is accepted." : "Only Status can be changed. Request Edit and wait for a Super Admin before changing other fields."}</p>
             ) : null}
-            <fieldset className="form-grid" disabled={Boolean(editingId) && user?.role === "encoder" && !basicRequest}>
+            <fieldset className="form-grid" disabled={fieldsLocked}>
               <Field label="Control Number" required>
                 <input value={controlNumber} disabled />
               </Field>
@@ -495,6 +528,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             </fieldset>
           </section>
 
+          <fieldset className="lock-fields" disabled={fieldsLocked}>
           <section className="panel-card">
             <h2>Computer specifications</h2>
             <div className="form-grid">
@@ -569,6 +603,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               </Field>
             </div>
           </section>
+          </fieldset>
 
           <section className="panel-card">
             <h2>Status and condition</h2>
@@ -624,6 +659,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
             </div>
           </section>
 
+          <fieldset className="lock-fields" disabled={fieldsLocked}>
           <section className="panel-card">
             <h2>Acquisition and warranty</h2>
             <div className="form-grid">
@@ -665,6 +701,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               </Field>
             </section>
           )}
+          </fieldset>
 
           {error ? <p className="error" role="alert">{error}</p> : null}
           <div className="computer-actions">

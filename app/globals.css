@@ -668,11 +668,35 @@ button:disabled { opacity: 0.6; cursor: wait; }
 
 .section-head .ghost { margin: 0; white-space: nowrap; }
 
-fieldset.form-grid {
+fieldset.form-grid,
+fieldset.lock-fields {
   border: 0;
   margin: 0;
   padding: 0;
   min-inline-size: 0;
+}
+
+fieldset.lock-fields:disabled {
+  opacity: 0.72;
+}
+
+.change-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.change-highlight {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 4px 6px;
+  background: #fff3c4;
+  border-left: 3px solid #c99212;
+  font-size: 12px;
+  white-space: normal;
+  max-width: 320px;
 }
 
 .computer-form select:disabled,

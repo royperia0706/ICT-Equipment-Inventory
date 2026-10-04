@@ -15,7 +15,7 @@ export async function POST(request) {
     return json({ ok: false, error: "Choose approve or reject." }, 400);
   }
   try {
-    const record = await decideEquipment(kind, user, body.id, body.decision);
+    const record = await decideEquipment(kind, user, body.id, body.decision, body.target);
     return json({ ok: true, record, removed: !record });
   } catch (error) {
     return json({ ok: false, error: error.message || "Could not update the request." }, error.status || 400);
