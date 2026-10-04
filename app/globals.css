@@ -878,6 +878,12 @@ fieldset.form-grid {
   box-shadow: 8px 0 10px rgba(28, 43, 36, 0.08);
 }
 
+.computer-table .freeze.end {
+  left: auto;
+  right: 0;
+  box-shadow: -8px 0 10px rgba(28, 43, 36, 0.08);
+}
+
 .computer-table thead .freeze {
   z-index: 3;
   background: #f7f4ee;

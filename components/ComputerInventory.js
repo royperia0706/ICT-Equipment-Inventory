@@ -392,14 +392,17 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <table className="computer-table">
                 <thead>
                   <tr>
-                    <th className="freeze">Actions</th>
                     {listColumns.map(([key, label]) => <th key={key}>{label}</th>)}
+                    <th className="freeze end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row.id || row.controlNumber}>
-                      <td className="freeze">
+                      {listColumns.map(([key]) => (
+                        <td key={key}>{cellValue(row, key)}</td>
+                      ))}
+                      <td className="freeze end">
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           {user?.role === "encoder" ? null : (
@@ -417,9 +420,6 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                         {row.pendingAction === "delete" ? <p className="pending-note">Delete awaiting approval</p> : null}
                         {row.pendingAction === "ber" ? <p className="pending-note">For BER awaiting Super Admin</p> : null}
                       </td>
-                      {listColumns.map(([key]) => (
-                        <td key={key}>{cellValue(row, key)}</td>
-                      ))}
                     </tr>
                   ))}
                 </tbody>

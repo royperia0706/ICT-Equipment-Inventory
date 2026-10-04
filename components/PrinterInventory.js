@@ -291,14 +291,23 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
               <table className="computer-table">
                 <thead>
                   <tr>
-                    <th className="freeze">Actions</th>
                     {columns.map(([key, label]) => <th key={key}>{label}</th>)}
+                    <th className="freeze end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row.id || row.controlNumber}>
-                      <td className="freeze">
+                      {columns.map(([key]) => (
+                        <td key={key}>
+                          {key === "aging"
+                            ? agingLabel(row.dateAcquired)
+                            : key === "status" && row.status === "Pending" && row.pendingStatus
+                              ? `Pending · ${row.pendingStatus}`
+                              : row[key] || "—"}
+                        </td>
+                      ))}
+                      <td className="freeze end">
                         <div className="row-actions">
                           <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
                           {user?.role === "encoder" ? null : (
@@ -315,15 +324,6 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                         {row.pendingAction === "delete" ? <p className="pending-note">Delete awaiting approval</p> : null}
                         {row.pendingAction === "ber" ? <p className="pending-note">For BER awaiting Super Admin</p> : null}
                       </td>
-                      {columns.map(([key]) => (
-                        <td key={key}>
-                          {key === "aging"
-                            ? agingLabel(row.dateAcquired)
-                            : key === "status" && row.status === "Pending" && row.pendingStatus
-                              ? `Pending · ${row.pendingStatus}`
-                              : row[key] || "—"}
-                        </td>
-                      ))}
                     </tr>
                   ))}
                 </tbody>
