@@ -108,9 +108,10 @@ function pieSlices(rows) {
   });
 }
 
-function Pie({ rows, label }) {
+function Pie({ rows, label, columns }) {
   const slices = pieSlices(rows);
-  const legend = slices.length ? slices : (rows.length ? rows : [{ label: "No equipment yet", value: 0 }]);
+  const legend = columns ? rows : (slices.length ? slices : (rows.length ? rows : [{ label: "No equipment yet", value: 0 }]));
+  const colorOf = Object.fromEntries(slices.map((slice) => [slice.label, slice.color]));
   return (
     <div className="pie-block">
       <div className="pie-chart">
@@ -137,15 +138,22 @@ function Pie({ rows, label }) {
           </g>
         </svg>
       </div>
-      <ul className="pie-legend">
+      <div className="pie-legend">
+        {columns ? (
+          <div className="pie-legend-head">
+            <span />
+            <span>{columns[0]}</span>
+            <span>{columns[1]}</span>
+          </div>
+        ) : null}
         {legend.map((slice) => (
-          <li key={slice.label}>
-            <i style={{ background: slice.color || "#C8CCD2" }} />
+          <div key={slice.label}>
+            <i style={{ background: colorOf[slice.label] || slice.color || "#C8CCD2" }} />
             <span>{slice.label}</span>
             <strong>{number(slice.value)}</strong>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -256,19 +264,10 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
         </section>
       ) : null}
 
-      <section className="stat-grid" aria-label="Equipment totals">
-        {cards.map((item) => (
-          <article key={item.label} className={`stat tone-${item.tone}`}>
-            <p>{item.label}</p>
-            <strong>{number(item.value)}</strong>
-          </article>
-        ))}
-      </section>
-
       <section className="split">
         <article className="panel-card">
           <h2>Equipment by status</h2>
-          <Pie rows={statusRows} label="Equipment by status" />
+          <Pie rows={statusRows} label="Equipment by status" columns={["Status", "Figure"]} />
         </article>
         <article className="panel-card">
           <h2>Equipment by province</h2>
