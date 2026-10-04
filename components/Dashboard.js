@@ -108,7 +108,7 @@ function pieSlices(rows) {
   });
 }
 
-function Pie({ rows, label, onView }) {
+function Pie({ rows, label }) {
   const slices = pieSlices(rows);
   const legend = slices.length ? slices : (rows.length ? rows : [{ label: "No equipment yet", value: 0 }]);
   return (
@@ -136,7 +136,6 @@ function Pie({ rows, label, onView }) {
             )}
           </g>
         </svg>
-        {onView ? <button type="button" className="pie-view" onClick={onView}>View</button> : null}
       </div>
       <ul className="pie-legend">
         {legend.map((slice) => (
@@ -199,8 +198,8 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [detailOpen]);
 
-  function openDetails() {
-    setDetailKey(recordKey(filteredRecords[0]));
+  function openDetails(record) {
+    setDetailKey(recordKey(record));
     setDetailOpen(true);
   }
 
@@ -228,6 +227,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
                     <th>Control Number</th>
                     <th>Inventory</th>
                     <th>Status</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -239,12 +239,13 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
                         <td>{item.controlNumber || "—"}</td>
                         <td>{item.kind === "Display" ? "Display/Projector" : (item.kind || "—")}</td>
                         <td>{item.status || "—"}</td>
+                        <td><button type="button" className="row-btn" onClick={() => openDetails(item)}>View</button></td>
                       </tr>
                     )) : (
                       <tr key={`${group.office}-${group.station}`}>
                         <td>{group.station}</td>
                         <td>{group.office}</td>
-                        <td colSpan="3">No items</td>
+                        <td colSpan="4">No items</td>
                       </tr>
                     )
                   ))}
@@ -267,7 +268,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
       <section className="split">
         <article className="panel-card">
           <h2>Equipment by status</h2>
-          <Pie rows={statusRows} label="Equipment by status" onView={openDetails} />
+          <Pie rows={statusRows} label="Equipment by status" />
         </article>
         <article className="panel-card">
           <h2>Equipment by province</h2>
