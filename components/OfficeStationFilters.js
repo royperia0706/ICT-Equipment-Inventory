@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
+import { officeLabel, officesIn, regionName, regionsIn, stationsIn } from "@/lib/location-choices";
 
 export default function OfficeStationFilters({ locations = [] }) {
   const regions = useMemo(() => regionsIn(locations), [locations]);
   const [region, setRegion] = useState(regions[0] || "");
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
-  const [office, setOffice] = useState(offices[0] || "");
+  const [office, setOffice] = useState("");
   const [stationId, setStationId] = useState("");
-  const stations = useMemo(() => stationsIn(locations, office), [locations, office]);
+  const stations = useMemo(() => {
+    if (!office) return locations.filter((row) => (row.region || regionName) === region);
+    return stationsIn(locations, office);
+  }, [locations, office, region]);
   const activeStation = stations.length === 1 ? `${stations[0].unit}-${stations[0].name}` : stationId;
   const selected = stations.find((row) => `${row.unit}-${row.name}` === activeStation) || null;
 
@@ -22,9 +25,8 @@ export default function OfficeStationFilters({ locations = [] }) {
           disabled={regions.length <= 1}
           onChange={(event) => {
             const nextRegion = event.target.value;
-            const nextOffices = officesIn(locations, nextRegion);
             setRegion(nextRegion);
-            setOffice(nextOffices[0] || "");
+            setOffice("");
             setStationId("");
           }}
         >
@@ -37,12 +39,13 @@ export default function OfficeStationFilters({ locations = [] }) {
         Office
         <select
           value={office}
-          disabled={offices.length <= 1}
+          disabled={!offices.length}
           onChange={(event) => {
             setOffice(event.target.value);
             setStationId("");
           }}
         >
+          <option value="">All Offices</option>
           {offices.map((unit) => (
             <option key={unit} value={unit}>{officeLabel(unit)}</option>
           ))}
@@ -62,7 +65,9 @@ export default function OfficeStationFilters({ locations = [] }) {
       <p className="filter-note">
         {selected
           ? `${officeLabel(office)} · ${selected.name} · ${selected.classification}`
-          : `${stations.length} stations under ${officeLabel(office) || "this office"}`}
+          : office
+            ? `${stations.length} stations under ${officeLabel(office)}`
+            : `${stations.length} stations under all offices`}
       </p>
     </section>
   );

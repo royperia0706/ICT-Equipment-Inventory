@@ -623,8 +623,8 @@ button:disabled { opacity: 0.6; cursor: wait; }
 
 .stat strong {
   display: block;
-  margin-top: 8px;
-  font-size: 28px;
+  margin-top: 4px;
+  font-size: 18px;
   font-weight: 600;
 }
 
