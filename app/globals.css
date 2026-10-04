@@ -495,7 +495,7 @@ button:disabled { opacity: 0.6; cursor: wait; }
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  width: 280px;
+  width: 320px;
   background: #fffcf7;
   border: 1px solid var(--line);
   box-shadow: 0 16px 40px rgba(28, 43, 36, 0.12);

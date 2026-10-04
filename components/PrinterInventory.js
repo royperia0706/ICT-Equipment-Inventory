@@ -1,6 +1,6 @@
 "use client";
 
-import ChangeNotes from "@/components/ChangeNotes";
+import { PendingButtons, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
 import { agingLabel, columnsWithAging } from "@/lib/aging";
 import { acquireYears, conditionsByStatus, statuses } from "@/lib/computer-fields";
@@ -150,11 +150,6 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
   }, [mode, form.municipality, form.office]);
 
   const columns = useMemo(() => columnsWithAging(printerColumns), []);
-
-  function canDecide(row) {
-    if (user?.role !== "super-admin" || !row) return false;
-    return Boolean(row.pendingAction) || row.editRequest === "pending";
-  }
 
   function needsApproval() {
     const ber = /^(for\s*ber|ber)$/i.test(form.status) || /^(for\s*ber|ber)$/i.test(form.condition);
@@ -338,24 +333,9 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                           {user?.role === "encoder" ? null : (
                             <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
                           )}
-                          {user?.role === "super-admin" && row.editRequest === "pending" ? (
-                            <>
-                              <button className="row-btn" type="button" onClick={() => decide(row, "approve", "edit-request")}>Accept edit</button>
-                              <button className="row-btn danger" type="button" onClick={() => decide(row, "reject", "edit-request")}>Reject edit</button>
-                            </>
-                          ) : null}
-                          {user?.role === "super-admin" && row.pendingAction ? (
-                            <>
-                              <button className="row-btn" type="button" onClick={() => decide(row, "approve", "changes")}>Approve</button>
-                              <button className="row-btn danger" type="button" onClick={() => decide(row, "reject", "changes")}>Reject</button>
-                            </>
-                          ) : null}
+                          <PendingButtons user={user} row={row} onDecide={decide} />
                         </div>
-                        {row.editRequest === "pending" ? <p className="pending-note">Edit request awaiting Super Admin</p> : null}
-                        {row.pendingAction === "edit" ? <p className="pending-note">Changes awaiting Super Admin</p> : null}
-                        <ChangeNotes record={row} />
-                        {row.pendingAction === "delete" ? <p className="pending-note">Delete awaiting approval</p> : null}
-                        {row.pendingAction === "ber" ? <p className="pending-note">For BER awaiting Super Admin</p> : null}
+                        <PendingNotes row={row} />
                       </td>
                     </tr>
                   ))}

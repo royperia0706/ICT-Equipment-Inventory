@@ -7,17 +7,22 @@ import { navigation } from "@/lib/navigation";
 
 const inventoryMenus = navigation.find((item) => item.label === "Inventory")?.children || [];
 
-export default function OfficeStationFilters({ locations = [], onFilter }) {
+export default function OfficeStationFilters({ locations = [], user, onFilter }) {
+  const lockOffice = user?.role === "assistant-admin" || user?.role === "encoder";
+  const lockStation = user?.role === "encoder";
   const region = useMemo(() => regionsIn(locations)[0] || regionName, [locations]);
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
-  const [office, setOffice] = useState("");
+  const [office, setOffice] = useState(lockOffice ? (user?.unit || "") : "");
   const [stationId, setStationId] = useState("");
   const [inventory, setInventory] = useState("");
   const [status, setStatus] = useState("");
   const stations = useMemo(() => {
-    if (!office) return locations.filter((row) => (row.region || regionName) === region);
-    return stationsIn(locations, office);
-  }, [locations, office, region]);
+    const pool = !office
+      ? locations.filter((row) => (row.region || regionName) === region)
+      : stationsIn(locations, office);
+    if (lockStation) return pool.filter((row) => row.name === user?.station);
+    return pool;
+  }, [locations, office, region, lockStation, user?.station]);
   const activeStation = stations.length === 1 ? `${stations[0].unit}-${stations[0].name}` : stationId;
   const selected = stations.find((row) => `${row.unit}-${row.name}` === activeStation) || null;
 
@@ -27,13 +32,13 @@ export default function OfficeStationFilters({ locations = [], onFilter }) {
         Office
         <select
           value={office}
-          disabled={!offices.length}
+          disabled={lockOffice || !offices.length}
           onChange={(event) => {
             setOffice(event.target.value);
             setStationId("");
           }}
         >
-          <option value="">All Offices</option>
+          {lockOffice ? null : <option value="">All Offices</option>}
           {offices.map((unit) => (
             <option key={unit} value={unit}>{officeLabel(unit)}</option>
           ))}
@@ -41,8 +46,8 @@ export default function OfficeStationFilters({ locations = [], onFilter }) {
       </label>
       <label>
         Station
-        <select value={activeStation} disabled={stations.length <= 1} onChange={(event) => setStationId(event.target.value)}>
-          {stations.length > 1 ? <option value="">All stations</option> : null}
+        <select value={activeStation} disabled={lockStation || stations.length <= 1} onChange={(event) => setStationId(event.target.value)}>
+          {lockStation || stations.length <= 1 ? null : <option value="">All stations</option>}
           {stations.map((row) => (
             <option key={`${row.unit}-${row.name}`} value={`${row.unit}-${row.name}`}>
               {row.name} ({row.classification})

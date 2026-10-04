@@ -5,14 +5,13 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/Icon";
 import SignOutButton from "@/components/SignOutButton";
-import { attention } from "@/lib/dashboard";
 import { navigation } from "@/lib/navigation";
 
 function isCurrent(pathname, href) {
   return pathname === href;
 }
 
-export default function AppShell({ user, children }) {
+export default function AppShell({ user, alerts = [], children }) {
   const pathname = usePathname();
   const [navOpen, setNavOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -139,12 +138,12 @@ export default function AppShell({ user, children }) {
               }}
             >
               <Icon name="bell" />
-              <span className="badge">{attention.length}</span>
+              <span className="badge">{alerts.reduce((sum, item) => sum + item.count, 0)}</span>
             </button>
             {alertsOpen ? (
               <div className="pop-panel" role="menu">
                 <p className="pop-title">Needs attention</p>
-                {attention.map((item) => (
+                {alerts.map((item) => (
                   <Link key={item.label} href={item.href}>
                     <span>{item.label}</span>
                     <strong>{item.count}</strong>

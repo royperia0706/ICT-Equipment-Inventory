@@ -158,7 +158,7 @@ function Pie({ rows, label, columns }) {
   );
 }
 
-export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [], records = [], summary }) {
+export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [], records = [], summary, user, accounts = [] }) {
   const [applied, setApplied] = useState(null);
   const onFilter = useCallback((next) => setApplied(next), []);
   const filteredRecords = useMemo(
@@ -186,8 +186,8 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
   }, [applied, filteredRecords]);
   const view = useMemo(() => {
     if (!records.length && summary && !applied) return summary;
-    return summarize(filteredRecords, locations);
-  }, [records, summary, applied, filteredRecords, locations]);
+    return summarize(filteredRecords, locations, user, accounts);
+  }, [records, summary, applied, filteredRecords, locations, user, accounts]);
   const cards = view?.totals || totals;
   const statusRows = cards.filter((item) => item.label !== "Total equipment");
   const provinceRows = view?.provinces || provinces;
@@ -218,7 +218,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
         <h1>{title}</h1>
       </header>
 
-      <OfficeStationFilters locations={locations} onFilter={onFilter} />
+      <OfficeStationFilters locations={locations} user={user} onFilter={onFilter} />
 
       {applied ? (
         <section className="panel-card filter-results">
