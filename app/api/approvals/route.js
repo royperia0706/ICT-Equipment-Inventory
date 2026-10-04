@@ -10,7 +10,7 @@ export async function POST(request) {
   const user = await actor();
   if (!user) return json({ ok: false, error: "Sign in first." }, 401);
   const body = await request.json().catch(() => ({}));
-  const kind = ["printer", "internet"].includes(body.equipment) ? body.equipment : "computer";
+  const kind = ["printer", "internet", "display"].includes(body.equipment) ? body.equipment : "computer";
   if (!body.id || (body.decision !== "approve" && body.decision !== "reject")) {
     return json({ ok: false, error: "Choose approve or reject." }, 400);
   }

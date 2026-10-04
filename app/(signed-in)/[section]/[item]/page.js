@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ComputerInventory from "@/components/ComputerInventory";
+import DisplayInventory from "@/components/DisplayInventory";
 import InternetInventory from "@/components/InternetInventory";
 import ModuleView from "@/components/ModuleView";
 import PrinterInventory from "@/components/PrinterInventory";
@@ -8,12 +9,13 @@ import { listComputers } from "@/lib/computers";
 import { requireUser } from "@/lib/guard";
 import { listLocations } from "@/lib/locations";
 import { moduleFor } from "@/lib/navigation";
+import { listDisplays } from "@/lib/displays";
 import { listInternets } from "@/lib/internets";
 import { listPrinters } from "@/lib/printers";
 
 export default async function ItemPage({ params }) {
   const { section, item } = await params;
-  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet")) {
+  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector")) {
     const user = await requireUser();
     let locations = [];
     try {
@@ -39,13 +41,22 @@ export default async function ItemPage({ params }) {
       }
       return <PrinterInventory initial={printers} locations={locations} user={user} />;
     }
-    let internets = [];
-    try {
-      internets = await listInternets(user);
-    } catch {
-      internets = [];
+    if (item === "internet") {
+      let internets = [];
+      try {
+        internets = await listInternets(user);
+      } catch {
+        internets = [];
+      }
+      return <InternetInventory initial={internets} locations={locations} user={user} />;
     }
-    return <InternetInventory initial={internets} locations={locations} user={user} />;
+    let displays = [];
+    try {
+      displays = await listDisplays(user);
+    } catch {
+      displays = [];
+    }
+    return <DisplayInventory initial={displays} locations={locations} user={user} />;
   }
   const page = moduleFor(section, item);
   if (!page) notFound();
