@@ -944,7 +944,7 @@ fieldset.form-grid {
 
 .dash-filters {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px 16px;
 }
 
@@ -987,11 +987,31 @@ fieldset.form-grid {
   gap: 6px;
 }
 
-.filter-note {
+.filter-actions {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filter-note {
   margin: 0;
   color: var(--muted);
 }
+
+.filter-actions button {
+  margin-top: 0;
+}
+
+.filter-results { margin-top: 12px; }
+
+.filter-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.filter-table { width: 100%; }
 
 @media (max-width: 640px) {
   .stat-grid, .pie-block, .form-grid, .dense-form .form-grid, .detail-grid, .dash-filters { grid-template-columns: 1fr; }

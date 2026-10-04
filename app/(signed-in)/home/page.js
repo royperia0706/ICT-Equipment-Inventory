@@ -23,5 +23,5 @@ export default async function HomePage() {
     locations = [];
     records = [];
   }
-  return <Dashboard locations={locations} summary={summarize(records, locations)} />;
+  return <Dashboard locations={locations} records={records} summary={summarize(records, locations)} />;
 }

@@ -1,6 +1,39 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import OfficeStationFilters from "@/components/OfficeStationFilters";
-import { activities, attention, provinces, totals } from "@/lib/dashboard";
+import { officeLabel } from "@/lib/location-choices";
+import { activities, attention, provinces, summarize, totals } from "@/lib/dashboard";
+
+const inventoryKind = {
+  "/inventory/computer": "Computer",
+  "/inventory/printer": "Printer",
+  "/inventory/internet": "Internet",
+  "/inventory/router": "Router",
+  "/inventory/switch": "Switch",
+  "/inventory/display-projector": "Display",
+  "/inventory/cellphone": "Cellphone",
+  "/inventory/handheld-radio": "Handheld Radio",
+  "/inventory/storage": "Storage",
+};
+
+function matchesFilters(record, filters) {
+  if (filters.office) {
+    const label = officeLabel(filters.office);
+    const officeHit = record.office === filters.office || record.unit === filters.office || record.province === label;
+    if (!officeHit) return false;
+  }
+  if (filters.station) {
+    if (record.municipality !== filters.station.name) return false;
+    const stationOffice = filters.station.unit;
+    const sameOffice = record.office === stationOffice || record.unit === stationOffice || record.province === officeLabel(stationOffice);
+    if (!sameOffice) return false;
+  }
+  if (filters.inventory && record.kind !== inventoryKind[filters.inventory]) return false;
+  if (filters.status && record.status !== filters.status) return false;
+  return true;
+}
 
 function number(value) {
   return value.toLocaleString("en-US");
@@ -78,12 +111,41 @@ function Pie({ rows, label }) {
   );
 }
 
-export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [], summary }) {
-  const cards = summary?.totals || totals;
+export default function Dashboard({ kicker = "Dashboard", title = "Inventory overview", locations = [], records = [], summary }) {
+  const [applied, setApplied] = useState(null);
+  const onFilter = useCallback((next) => setApplied(next), []);
+  const filteredRecords = useMemo(
+    () => (applied ? records.filter((record) => matchesFilters(record, applied)) : records),
+    [records, applied],
+  );
+  const stationGroups = useMemo(() => {
+    if (!applied) return [];
+    const groups = new Map();
+    for (const record of filteredRecords) {
+      const station = record.municipality || "Unassigned";
+      const office = record.province || officeLabel(record.office || record.unit || "");
+      const key = `${office}|${station}`;
+      if (!groups.has(key)) groups.set(key, { office, station, items: [] });
+      groups.get(key).items.push(record);
+    }
+    if (applied.station && groups.size === 0) {
+      groups.set("selected", {
+        office: officeLabel(applied.station.unit),
+        station: applied.station.name,
+        items: [],
+      });
+    }
+    return [...groups.values()].sort((a, b) => a.office.localeCompare(b.office) || a.station.localeCompare(b.station));
+  }, [applied, filteredRecords]);
+  const view = useMemo(() => {
+    if (!records.length && summary && !applied) return summary;
+    return summarize(filteredRecords, locations);
+  }, [records, summary, applied, filteredRecords, locations]);
+  const cards = view?.totals || totals;
   const statusRows = cards.filter((item) => item.label !== "Total equipment");
-  const provinceRows = summary?.provinces || provinces;
-  const attentionRows = summary?.attention || attention;
-  const activityRows = summary?.activities || activities;
+  const provinceRows = view?.provinces || provinces;
+  const attentionRows = view?.attention || attention;
+  const activityRows = view?.activities || activities;
 
   return (
     <div className="dash">
@@ -92,7 +154,49 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
         <h1>{title}</h1>
       </header>
 
-      <OfficeStationFilters locations={locations} />
+      <OfficeStationFilters locations={locations} onFilter={onFilter} />
+
+      {applied ? (
+        <section className="panel-card filter-results">
+          <h2>Filtered stations and items</h2>
+          {stationGroups.length === 0 ? (
+            <p className="filter-empty">No stations or items match this filter.</p>
+          ) : (
+            <div className="computer-table-wrap">
+              <table className="computer-table filter-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Office</th>
+                    <th>Control Number</th>
+                    <th>Inventory</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stationGroups.map((group) => (
+                    group.items.length ? group.items.map((item) => (
+                      <tr key={item.controlNumber || `${group.station}-${item.kind}`}>
+                        <td>{group.station}</td>
+                        <td>{group.office}</td>
+                        <td>{item.controlNumber || "—"}</td>
+                        <td>{item.kind === "Display" ? "Display/Projector" : (item.kind || "—")}</td>
+                        <td>{item.status || "—"}</td>
+                      </tr>
+                    )) : (
+                      <tr key={`${group.office}-${group.station}`}>
+                        <td>{group.station}</td>
+                        <td>{group.office}</td>
+                        <td colSpan="3">No items</td>
+                      </tr>
+                    )
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      ) : null}
 
       <section className="stat-grid" aria-label="Equipment totals">
         {cards.map((item) => (
