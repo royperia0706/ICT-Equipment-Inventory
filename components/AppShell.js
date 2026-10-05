@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/Icon";
+import NeedApproval from "@/components/NeedApproval";
 import SignOutButton from "@/components/SignOutButton";
 import { navigation } from "@/lib/navigation";
 
@@ -138,17 +139,12 @@ export default function AppShell({ user, alerts = [], children }) {
               }}
             >
               <Icon name="bell" />
-              <span className="badge">{alerts.reduce((sum, item) => sum + item.count, 0)}</span>
+              <span className="badge">{alerts.filter((item) => /approval|edit request/i.test(item.note || "")).length}</span>
             </button>
             {alertsOpen ? (
               <div className="pop-panel" role="menu">
                 <p className="pop-title">Needs attention</p>
-                {alerts.map((item) => (
-                  <Link key={item.label} href={item.href}>
-                    <span>{item.label}</span>
-                    <strong>{item.count}</strong>
-                  </Link>
-                ))}
+                <NeedApproval items={alerts} />
               </div>
             ) : null}
           </div>

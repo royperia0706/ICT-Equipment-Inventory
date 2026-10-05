@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import NeedApproval from "@/components/NeedApproval";
 import OfficeStationFilters from "@/components/OfficeStationFilters";
 import { cellphoneColumns } from "@/lib/cellphone-fields";
 import { computerColumns } from "@/lib/computer-fields";
@@ -11,7 +12,7 @@ import { officeLabel } from "@/lib/location-choices";
 import { printerColumns } from "@/lib/printer-fields";
 import { radioColumns } from "@/lib/radio-fields";
 import { storageColumns } from "@/lib/storage-fields";
-import { activities, attention, provinces, summarize, totals } from "@/lib/dashboard";
+import { activities, notificationItems, provinces, summarize, totals } from "@/lib/dashboard";
 
 const columnsByKind = {
   Computer: computerColumns,
@@ -191,7 +192,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
   const cards = view?.totals || totals;
   const statusRows = cards.filter((item) => item.label !== "Total equipment");
   const provinceRows = view?.provinces || provinces;
-  const attentionRows = view?.attention || attention;
+  const attentionRows = notificationItems(filteredRecords, user, accounts);
   const activityRows = view?.activities || activities;
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailKey, setDetailKey] = useState("");
@@ -278,15 +279,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
 
       <section className="panel-card">
         <h2>Needs attention</h2>
-        <ul className="attention">
-          {attentionRows.map((item) => (
-            <li key={item.label}>
-              <span>{item.label}</span>
-              <strong>{number(item.count)}</strong>
-              <Link href={item.href}>View</Link>
-            </li>
-          ))}
-        </ul>
+        <NeedApproval items={attentionRows} />
       </section>
 
       <section className="panel-card">

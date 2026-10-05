@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import AccountsView from "@/components/AccountsView";
 import EquipmentStatusList from "@/components/EquipmentStatusList";
 import ModuleView from "@/components/ModuleView";
+import { scopeLocations } from "@/lib/access";
 import { listAllEquipment } from "@/lib/all-equipment";
 import { requireUser } from "@/lib/guard";
 import { listLocations } from "@/lib/locations";
@@ -42,13 +43,25 @@ export default async function SectionPage({ params }) {
   if (statusPage) {
     const user = await requireUser();
     let records = [];
+    let locations = [];
     try {
       records = await listAllEquipment(user);
+      locations = scopeLocations(user, await listLocations());
     } catch {
       records = [];
+      locations = [];
     }
     const rows = records.filter((row) => statusPage.statuses.includes(row.status));
-    return <EquipmentStatusList title={statusPage.title} text={statusPage.text} records={rows} />;
+    return (
+      <EquipmentStatusList
+        title={statusPage.title}
+        text={statusPage.text}
+        records={rows}
+        locations={locations}
+        user={user}
+        pageStatuses={statusPage.statuses}
+      />
+    );
   }
   const page = moduleFor(section);
   if (!page) notFound();

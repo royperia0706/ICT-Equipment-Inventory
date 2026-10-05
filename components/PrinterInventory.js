@@ -1,5 +1,6 @@
 "use client";
 
+import FocusableRow from "@/components/FocusableRow";
 import { PendingButtons, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
 import { agingLabel, columnsWithAging } from "@/lib/aging";
@@ -225,6 +226,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
       setError(data.error || "Could not update this request.");
       return;
     }
+    setNotice(decision === "approve" ? "Approved." : "Rejected.");
     if (data.removed || (decision === "approve" && row.pendingAction === "delete")) {
       setRows((current) => current.filter((item) => item.id !== row.id));
       return;
@@ -317,7 +319,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                 </thead>
                 <tbody>
                   {rows.map((row) => (
-                    <tr key={row.id || row.controlNumber}>
+                    <FocusableRow key={row.id || row.controlNumber} focusKey={row.controlNumber || row.id}>
                       {columns.map(([key]) => (
                         <td key={key}>
                           {key === "aging"
@@ -337,7 +339,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                         </div>
                         <PendingNotes row={row} />
                       </td>
-                    </tr>
+                    </FocusableRow>
                   ))}
                 </tbody>
               </table>

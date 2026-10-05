@@ -1,5 +1,6 @@
 "use client";
 
+import FocusableRow from "@/components/FocusableRow";
 import { PendingButtons, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
 import { acquireYears, conditionsByStatus, statuses, storageUnits } from "@/lib/computer-fields";
@@ -220,6 +221,7 @@ export default function StorageInventory({ initial = [], locations = [], user = 
       setError(data.error || "Could not update this request.");
       return;
     }
+    setNotice(decision === "approve" ? "Approved." : "Rejected.");
     if (data.removed || (decision === "approve" && row.pendingAction === "delete")) {
       setRows((current) => current.filter((item) => item.id !== row.id));
       return;
@@ -313,7 +315,7 @@ export default function StorageInventory({ initial = [], locations = [], user = 
                 </thead>
                 <tbody>
                   {rows.map((row) => (
-                    <tr key={row.id || row.controlNumber}>
+                    <FocusableRow key={row.id || row.controlNumber} focusKey={row.controlNumber || row.id}>
                       {storageColumns.map(([key]) => (
                         <td key={key}>
                           {key === "status" && row.status === "Pending" && row.pendingStatus
@@ -331,7 +333,7 @@ export default function StorageInventory({ initial = [], locations = [], user = 
                         </div>
                         <PendingNotes row={row} />
                       </td>
-                    </tr>
+                    </FocusableRow>
                   ))}
                 </tbody>
               </table>

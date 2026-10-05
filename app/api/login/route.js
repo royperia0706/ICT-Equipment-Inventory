@@ -55,5 +55,16 @@ export async function POST(request) {
   clearLock(username);
   const step = result.mustChangePassword ? "reset-password" : "verified";
   await setSession({ username: result.user.username, step, revision: result.revision || 0 });
+  const { recordActivity } = await import("@/lib/activity");
+  await recordActivity({
+    username: result.user.username,
+    action: "Signed in",
+    detail: `${result.user.username} signed in`,
+    kind: "Account",
+    controlNumber: result.user.username,
+    unit: result.user.unit || "",
+    province: result.user.province || "",
+    municipality: result.user.station || "",
+  });
   return json({ ok: true, step, ...result.user });
 }

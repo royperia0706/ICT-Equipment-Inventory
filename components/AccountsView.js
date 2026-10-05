@@ -1,5 +1,6 @@
 "use client";
 
+import FocusableRow from "@/components/FocusableRow";
 import { useMemo, useState } from "react";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
@@ -215,6 +216,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
       setError(data.error || "Could not update this request.");
       return;
     }
+    setNotice(decision === "approve" ? "Approved." : "Rejected.");
     if (data.removed) {
       setRows((current) => current.filter((row) => row.username !== account.username));
       return;
@@ -263,7 +265,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                 </thead>
                 <tbody>
                   {rows.map((account) => (
-                    <tr key={account.username}>
+                    <FocusableRow key={account.username} focusKey={account.username}>
                       {manager ? (
                         <td className="freeze">
                           {canChange(user, account) ? (
@@ -292,7 +294,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                       <td>{account.username}</td>
                       <td>{account.access}</td>
                       <td>{account.unit}</td>
-                    </tr>
+                    </FocusableRow>
                   ))}
                 </tbody>
               </table>

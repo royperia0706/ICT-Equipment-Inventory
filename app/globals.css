@@ -519,6 +519,42 @@ button:disabled { opacity: 0.6; cursor: wait; }
 }
 
 .pop-panel a:hover { background: #f3efe6; }
+.need-approval {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.need-approval strong {
+  min-width: 32px;
+  text-align: center;
+  font-size: 18px;
+}
+.approval-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.approval-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.approval-list span { color: var(--muted); font-size: 13px; }
+.pop-empty { margin: 4px 8px 8px; color: var(--muted); font-size: 13px; }
+.row-focus td { background: #fff3c4; }
 
 .account-panel .side-link {
   color: var(--ink);
