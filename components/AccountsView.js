@@ -107,10 +107,22 @@ function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onSho
             bottom: place.upward ? window.innerHeight - place.top : "auto",
           }}
         >
-          <button type="button" onClick={() => { setOpen(false); onEdit(account); }}><MenuIcon name="edit" />Edit</button>
-          <button type="button" onClick={() => { setOpen(false); onReset(account); }}><MenuIcon name="reset" />Reset Password</button>
-          <button type="button" onClick={() => { setOpen(false); onDeactivate(account); }}><MenuIcon name="deactivate" />Deactivate</button>
-          <button type="button" onClick={() => { setOpen(false); onShow(account); }}><MenuIcon name="show" />Show Password</button>
+          {user.role === "assistant-admin" ? (
+            <>
+              <button type="button" onClick={() => { setOpen(false); onReset(account); }}><MenuIcon name="reset" />Reset</button>
+              <button type="button" onClick={() => { setOpen(false); onEdit(account); }}><MenuIcon name="edit" />Edit</button>
+              <button type="button" onClick={() => { setOpen(false); onDeactivate(account); }}><MenuIcon name="deactivate" />Deactivate</button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => { setOpen(false); onEdit(account); }}><MenuIcon name="edit" />Edit</button>
+              <button type="button" onClick={() => { setOpen(false); onReset(account); }}><MenuIcon name="reset" />Reset Password</button>
+              <button type="button" onClick={() => { setOpen(false); onDeactivate(account); }}><MenuIcon name="deactivate" />Deactivate</button>
+              {user.role === "super-admin" ? (
+                <button type="button" onClick={() => { setOpen(false); onShow(account); }}><MenuIcon name="show" />Show Password</button>
+              ) : null}
+            </>
+          )}
           {user.role === "super-admin" && account.pendingAction ? (
             <>
               <button type="button" onClick={() => { setOpen(false); onDecide(account, "approve"); }}><MenuIcon name="approve" />Approve</button>
@@ -119,7 +131,7 @@ function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onSho
           ) : null}
         </div>
       ) : null}
-      {account.pendingAction ? <p className="pending-note">Pending Super Admin approval</p> : null}
+      {account.pendingAction ? <p className="pending-note">On hold until a Super Admin approves</p> : null}
     </div>
   );
 }
@@ -240,7 +252,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
         return;
       }
       applyResult(data);
-      setNotice(data.pending ? "Submitted. A Super Admin must approve this before it takes effect." : "Account saved.");
+      setNotice(data.pending ? "On hold. A Super Admin must approve this before it takes effect." : "Account saved.");
       setMode("list");
     } catch {
       setError("Could not save this account.");
@@ -250,10 +262,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   }
 
   function statusText(account) {
-    if (account.pendingAction === "edit") {
-      return `Pending · edit to ${account.pendingStation || account.station} (${account.pendingAccess || account.access})`;
-    }
-    if (account.pendingAction) return `Pending · ${account.pendingAction}`;
+    if (account.pendingAction) return "On hold";
     if (account.blocked) return "Deactivated";
     if (account.mustChangePassword) return "Password reset";
     return "Active";
@@ -277,18 +286,31 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   }
 
   async function resetPassword(account) {
-    if (!window.confirm(`Reset the password for ${account.username}?`)) return;
+    const hold = user?.role === "assistant-admin";
+    const question = hold
+      ? `Submit a password reset for ${account.username}? It stays on hold until a Super Admin approves it.`
+      : `Reset the password for ${account.username}?`;
+    if (!window.confirm(question)) return;
     setIssued(null);
     const data = await accountAction(account, "reset-password");
     if (!data) return;
+    if (data.pending) {
+      setNotice("On hold. A Super Admin must approve the password reset.");
+      return;
+    }
     setIssued({ username: account.username, password: data.temporaryPassword });
     setNotice("Password reset. They must set a new password at the next sign-in.");
   }
 
   async function deactivate(account) {
-    if (!window.confirm(`Deactivate ${account.username}? They will not be able to sign in.`)) return;
+    const hold = user?.role === "assistant-admin";
+    const question = hold
+      ? `Submit deactivation for ${account.username}? It stays on hold until a Super Admin approves it.`
+      : `Deactivate ${account.username}? They will not be able to sign in.`;
+    if (!window.confirm(question)) return;
     const data = await accountAction(account, "deactivate");
-    if (data) setNotice("Account deactivated.");
+    if (!data) return;
+    setNotice(data.pending ? "On hold. A Super Admin must approve the deactivation." : "Account deactivated.");
   }
 
   async function showPassword(account) {
