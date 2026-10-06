@@ -1,10 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { statuses } from "@/lib/computer-fields";
+import { agingLabel, columnsWithAging } from "@/lib/aging";
+import { cellphoneColumns } from "@/lib/cellphone-fields";
+import { computerColumns, statuses } from "@/lib/computer-fields";
+import { displayColumns } from "@/lib/display-fields";
+import { internetColumns } from "@/lib/internet-fields";
 import { officeLabel, officesIn, regionName, regionsIn, stationsIn } from "@/lib/location-choices";
+import { navigation } from "@/lib/navigation";
+import { printerColumns } from "@/lib/printer-fields";
+import { radioColumns } from "@/lib/radio-fields";
+import { storageColumns } from "@/lib/storage-fields";
 
-const reportColumns = ["Entry Date", "Control Number", "Inventory", "Office", "Station", "Status", "Brand", "Model", "Serial Number", "End User"];
+const inventoryMenus = navigation.find((item) => item.label === "Inventory")?.children || [];
+
+const previewColumns = ["Entry Date", "Control Number", "Inventory", "Office", "Station", "Status", "Brand", "Model", "Serial Number", "End User"];
+
+const sheets = [
+  { href: "/inventory/computer", name: "Computer", kind: "Computer", columns: columnsWithAging(computerColumns) },
+  { href: "/inventory/printer", name: "Printer", kind: "Printer", columns: columnsWithAging(printerColumns) },
+  { href: "/inventory/internet", name: "Internet", kind: "Internet", columns: internetColumns },
+  { href: "/inventory/display-projector", name: "Display Projector", kind: "Display", columns: columnsWithAging(displayColumns) },
+  { href: "/inventory/cellphone", name: "Cellphone", kind: "Cellphone", columns: columnsWithAging(cellphoneColumns) },
+  { href: "/inventory/handheld-radio", name: "Handheld Radio", kind: "Handheld Radio", columns: columnsWithAging(radioColumns) },
+  { href: "/inventory/storage", name: "Storage", kind: "Storage", columns: columnsWithAging(storageColumns) },
+];
 
 function matches(record, filters) {
   if (filters.office) {
@@ -18,6 +38,10 @@ function matches(record, filters) {
     const sameOffice = record.office === stationOffice || record.unit === stationOffice || record.province === officeLabel(stationOffice);
     if (!sameOffice) return false;
   }
+  if (filters.inventory) {
+    const sheet = sheets.find((item) => item.href === filters.inventory);
+    if (!sheet || record.kind !== sheet.kind) return false;
+  }
   if (filters.status && record.status !== filters.status) return false;
   return true;
 }
@@ -26,7 +50,7 @@ function endUser(row) {
   return row.specificEndUser || row.accountablePerson || row.issuedTo || "";
 }
 
-function reportValues(row) {
+function previewValues(row) {
   return [
     row.entryDate || "",
     row.controlNumber || row.id || "",
@@ -41,6 +65,11 @@ function reportValues(row) {
   ];
 }
 
+function fieldValue(row, key) {
+  if (key === "aging") return agingLabel(row.dateAcquired);
+  return row[key] || "";
+}
+
 function xmlEscape(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -49,13 +78,18 @@ function xmlEscape(value) {
     .replace(/"/g, "&quot;");
 }
 
-function downloadExcel(rows) {
-  const header = `<Row>${reportColumns.map((label) => `<Cell><Data ss:Type="String">${xmlEscape(label)}</Data></Cell>`).join("")}</Row>`;
-  const body = rows.map((row) => `<Row>${reportValues(row).map((value) => `<Cell><Data ss:Type="String">${xmlEscape(value)}</Data></Cell>`).join("")}</Row>`).join("");
+function downloadExcel(rows, inventory) {
+  const chosen = inventory ? sheets.filter((sheet) => sheet.href === inventory) : sheets;
+  const worksheets = chosen.length ? chosen.map((sheet) => {
+    const items = rows.filter((row) => row.kind === sheet.kind);
+    const header = `<Row>${sheet.columns.map(([, label]) => `<Cell><Data ss:Type="String">${xmlEscape(label)}</Data></Cell>`).join("")}</Row>`;
+    const body = items.map((row) => `<Row>${sheet.columns.map(([key]) => `<Cell><Data ss:Type="String">${xmlEscape(fieldValue(row, key))}</Data></Cell>`).join("")}</Row>`).join("");
+    return `<Worksheet ss:Name="${xmlEscape(sheet.name)}"><Table>${header}${body}</Table></Worksheet>`;
+  }).join("") : `<Worksheet ss:Name="${xmlEscape((inventoryMenus.find((item) => item.href === inventory)?.label || "Report").replace(/[\\/?*[\]:]/g, " "))}"><Table><Row><Cell><Data ss:Type="String">No records</Data></Cell></Row></Table></Worksheet>`;
   const xml = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Worksheet ss:Name="Report"><Table>${header}${body}</Table></Worksheet>
+${worksheets}
 </Workbook>`;
   const blob = new Blob([xml], { type: "application/vnd.ms-excel" });
   const url = URL.createObjectURL(blob);
@@ -73,6 +107,7 @@ export default function Reports({ locations = [], records = [], user }) {
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
   const [office, setOffice] = useState(lockOffice ? (user?.unit || "") : "");
   const [stationId, setStationId] = useState("");
+  const [inventory, setInventory] = useState("");
   const [status, setStatus] = useState("");
   const [rows, setRows] = useState(null);
   const stations = useMemo(() => {
@@ -88,12 +123,13 @@ export default function Reports({ locations = [], records = [], user }) {
   function clear() {
     setOffice(lockOffice ? (user?.unit || "") : "");
     setStationId("");
+    setInventory("");
     setStatus("");
     setRows(null);
   }
 
   function generate() {
-    setRows(records.filter((record) => matches(record, { office, station: selected, status })));
+    setRows(records.filter((record) => matches(record, { office, station: selected, inventory, status })));
   }
 
   return (
@@ -133,6 +169,15 @@ export default function Reports({ locations = [], records = [], user }) {
           </select>
         </label>
         <label>
+          Inventory
+          <select value={inventory} onChange={(event) => setInventory(event.target.value)}>
+            <option value="">All inventory</option>
+            {inventoryMenus.map((item) => (
+              <option key={item.href} value={item.href}>{item.label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
           Status
           <select value={status} onChange={(event) => setStatus(event.target.value)}>
             <option value="">All statuses</option>
@@ -150,18 +195,18 @@ export default function Reports({ locations = [], records = [], user }) {
         <section className="panel-card filter-results">
           <div className="report-head">
             <h2>{rows.length} {rows.length === 1 ? "item" : "items"}</h2>
-            <button type="button" className="filter-btn" onClick={() => downloadExcel(rows)}>Download Excel</button>
+            <button type="button" className="filter-btn" onClick={() => downloadExcel(rows, inventory)}>Download Excel</button>
           </div>
           {rows.length === 0 ? <p className="hint">No equipment matches this report.</p> : (
             <div className="computer-table-wrap">
               <table className="computer-table">
                 <thead>
-                  <tr>{reportColumns.map((label) => <th key={label}>{label}</th>)}</tr>
+                  <tr>{previewColumns.map((label) => <th key={label}>{label}</th>)}</tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row.controlNumber || row.id}>
-                      {reportValues(row).map((value, index) => <td key={reportColumns[index]}>{value || "—"}</td>)}
+                      {previewValues(row).map((value, index) => <td key={previewColumns[index]}>{value || "—"}</td>)}
                     </tr>
                   ))}
                 </tbody>
