@@ -38,6 +38,7 @@ export default function MassUpload({ kind, user, onLoaded }) {
   const [error, setError] = useState("");
   const [prompt, setPrompt] = useState("");
   const [uploaded, setUploaded] = useState(0);
+  const [details, setDetails] = useState([]);
   if (user?.role !== "super-admin" || !spec) return null;
 
   function closeModal() {
@@ -53,6 +54,17 @@ export default function MassUpload({ kind, user, onLoaded }) {
     setMessage("");
     setError("");
     setUploaded(0);
+    setDetails([]);
+  }
+
+  function showMismatch(data) {
+    const lines = Array.isArray(data?.errors)
+      ? data.errors.map((item) => `Row ${item.row}: ${item.error}`)
+      : [];
+    if (!lines.length && data?.error) lines.push(data.error);
+    if (!lines.length) lines.push("A row did not match the database.");
+    setDetails(lines);
+    setPrompt("mismatch");
   }
 
   async function sendFile(mode) {
@@ -78,7 +90,7 @@ export default function MassUpload({ kind, user, onLoaded }) {
     try {
       const { response, data } = await sendFile("check");
       if (data.mismatch) {
-        setPrompt("mismatch");
+        showMismatch(data);
         return;
       }
       if (!response.ok) {
@@ -100,7 +112,7 @@ export default function MassUpload({ kind, user, onLoaded }) {
     try {
       const { response, data } = await sendFile("save");
       if (data.mismatch || !response.ok) {
-        setPrompt("mismatch");
+        showMismatch(data);
         return;
       }
       setUploaded(Number(data.added) || 0);
@@ -109,7 +121,7 @@ export default function MassUpload({ kind, user, onLoaded }) {
       const listed = await fetch(spec.reload).then((result) => result.json());
       if (Array.isArray(listed[spec.listKey])) onLoaded(listed[spec.listKey]);
     } catch {
-      setPrompt("mismatch");
+      showMismatch();
     } finally {
       setBusy(false);
     }
@@ -117,7 +129,7 @@ export default function MassUpload({ kind, user, onLoaded }) {
 
   return (
     <>
-      <button className="ghost" type="button" onClick={() => { setOpen(true); setError(""); setMessage(""); setPrompt(""); }}>Mass upload</button>
+      <button className="ghost" type="button" onClick={() => { setOpen(true); setError(""); setMessage(""); setPrompt(""); setDetails([]); }}>Mass upload</button>
       {open ? (
         <div className="modal-back" role="presentation" onClick={closeModal}>
           <form className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={upload}>
@@ -158,6 +170,9 @@ export default function MassUpload({ kind, user, onLoaded }) {
                 ) : (
                   <>
                     <p>Database did not match. Update your data and try again</p>
+                    <ul className="prompt-errors">
+                      {details.map((line, index) => <li key={`${index}-${line}`}>{line}</li>)}
+                    </ul>
                     <button type="button" onClick={closeAll}>Ok</button>
                   </>
                 )}

@@ -192,6 +192,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
   const cards = view?.totals || totals;
   const statusRows = cards.filter((item) => item.label !== "Total equipment");
   const provinceRows = view?.provinces || provinces;
+  const inventoryRows = view?.inventory || [];
   const attentionRows = notificationItems(filteredRecords, user, accounts);
   const activityRows = view?.activities || activities;
   const [detailOpen, setDetailOpen] = useState(false);
@@ -274,6 +275,10 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
           <h2>Equipment by province</h2>
           <Pie rows={provinceRows} label="Equipment by province" />
           <Link className="text-link" href="/inventory/locations">View by location</Link>
+        </article>
+        <article className="panel-card">
+          <h2>Inventory items</h2>
+          <Pie rows={inventoryRows} label="Inventory items with quantity" columns={["Item", "Quantity"]} />
         </article>
       </section>
 
