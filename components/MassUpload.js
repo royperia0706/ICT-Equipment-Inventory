@@ -37,12 +37,22 @@ export default function MassUpload({ kind, user, onLoaded }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [uploaded, setUploaded] = useState(0);
   if (user?.role !== "super-admin" || !spec) return null;
 
   function closeModal() {
     if (busy) return;
     setOpen(false);
     setPrompt("");
+  }
+
+  function closeAll() {
+    setOpen(false);
+    setPrompt("");
+    setFile(null);
+    setMessage("");
+    setError("");
+    setUploaded(0);
   }
 
   async function sendFile(mode) {
@@ -93,11 +103,11 @@ export default function MassUpload({ kind, user, onLoaded }) {
         setPrompt("mismatch");
         return;
       }
-      setPrompt("");
-      setMessage(`Uploaded ${data.added}.`);
+      setUploaded(Number(data.added) || 0);
+      setPrompt("done");
+      setFile(null);
       const listed = await fetch(spec.reload).then((result) => result.json());
       if (Array.isArray(listed[spec.listKey])) onLoaded(listed[spec.listKey]);
-      setFile(null);
     } catch {
       setPrompt("mismatch");
     } finally {
@@ -140,10 +150,15 @@ export default function MassUpload({ kind, user, onLoaded }) {
                       <button className="ghost" type="button" onClick={() => setPrompt("")} disabled={busy}>Cancel</button>
                     </div>
                   </>
+                ) : prompt === "done" ? (
+                  <>
+                    <p>Total of {uploaded} data has been uploaded.</p>
+                    <button type="button" onClick={closeAll}>Ok</button>
+                  </>
                 ) : (
                   <>
                     <p>Database did not match. Update your data and try again</p>
-                    <button type="button" onClick={() => setPrompt("")}>Ok</button>
+                    <button type="button" onClick={closeAll}>Ok</button>
                   </>
                 )}
               </div>
