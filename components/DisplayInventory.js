@@ -413,7 +413,7 @@ export default function DisplayInventory({ initial = [], locations = [], user = 
               <Field label="Location" required>
                 <input name="location" value={form.location} onChange={update} required placeholder="Office" />
               </Field>
-              <Field label="Issued to" required>
+              <Field label="Accountable Person" required>
                 <input name="issuedTo" value={form.issuedTo} onChange={update} required />
               </Field>
             </fieldset>

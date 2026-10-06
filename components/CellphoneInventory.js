@@ -413,7 +413,7 @@ export default function CellphoneInventory({ initial = [], locations = [], user 
               <Field label="Mode of Acquisition" required>
                 <Select name="modeOfAcquisition" value={form.modeOfAcquisition} onChange={update} options={cellphoneAcquisitions} required />
               </Field>
-              <Field label="Issued to" required>
+              <Field label="End User" required>
                 <input name="issuedTo" value={form.issuedTo} onChange={update} required />
               </Field>
             </fieldset>

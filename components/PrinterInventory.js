@@ -27,7 +27,6 @@ const emptyForm = {
   office: "",
   section: "",
   accountablePerson: "",
-  assignedUser: "",
   status: "",
   condition: "",
   targetFixDate: "",
@@ -65,7 +64,6 @@ function formFromRow(row) {
     office: row.office || "",
     section: row.section || "",
     accountablePerson: row.accountablePerson || "",
-    assignedUser: row.assignedUser || "",
     status,
     condition: (conditionsByStatus[status] || []).includes(row.condition) ? row.condition : "",
     targetFixDate: row.targetFixDate || "",
@@ -421,11 +419,8 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
               <Field label="Section" required>
                 <input name="section" value={form.section} onChange={update} required />
               </Field>
-              <Field label="Specific User" required>
-                <input name="accountablePerson" value={form.accountablePerson} onChange={update} required placeholder="Pangalan ng specific user" />
-              </Field>
-              <Field label="Assigned User" required>
-                <input name="assignedUser" value={form.assignedUser} onChange={update} required placeholder="Pangalan ng gumagamit" />
+              <Field label="End User" required>
+                <input name="accountablePerson" value={form.accountablePerson} onChange={update} required placeholder="Name of the end user" />
               </Field>
             </div>
           </section>

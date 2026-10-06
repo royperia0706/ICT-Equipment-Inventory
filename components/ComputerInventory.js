@@ -55,7 +55,6 @@ const emptyForm = {
   office: "",
   section: "",
   specificEndUser: "",
-  accountablePerson: "",
   assignmentStatus: "",
   status: "",
   condition: "",
@@ -116,7 +115,6 @@ function formFromRow(row) {
     office: row.office || "",
     section: row.section || emptyForm.section,
     specificEndUser: row.specificEndUser || "",
-    accountablePerson: row.accountablePerson || "",
     assignmentStatus: row.assignmentStatus || emptyForm.assignmentStatus,
     status: statuses.includes(row.status) ? row.status : statuses.includes(row.pendingStatus) ? row.pendingStatus : "",
     condition: (conditionsByStatus[statuses.includes(row.status) ? row.status : statuses.includes(row.pendingStatus) ? row.pendingStatus : ""] || []).includes(row.condition) ? row.condition : "",
@@ -501,8 +499,8 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Date Manufacture" required>
                 <input name="dateManufacture" type="date" value={form.dateManufacture} onChange={update} required />
               </Field>
-              <Field label="Model" required>
-                <input name="model" value={form.model} onChange={update} required />
+              <Field label="Model">
+                <input name="model" value={form.model} onChange={update} />
               </Field>
               <Field label="Serial Number" required>
                 <input name="serialNumber" value={form.serialNumber} onChange={update} required />
@@ -574,14 +572,11 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Section" required>
                 <input name="section" value={form.section} onChange={update} required />
               </Field>
-              <Field label="Specific End User" required>
-                <input name="specificEndUser" value={form.specificEndUser} onChange={update} placeholder="Pangalan ng end user" required />
+              <Field label="End User" required>
+                <input name="specificEndUser" value={form.specificEndUser} onChange={update} placeholder="Name of the end user" required />
               </Field>
               <Field label="Assignment Status" required>
                 <Select name="assignmentStatus" value={form.assignmentStatus} onChange={update} options={form.assignmentStatus && !assignmentStatuses.includes(form.assignmentStatus) ? [form.assignmentStatus, ...assignmentStatuses] : assignmentStatuses} required />
-              </Field>
-              <Field label="Accountable Person" required>
-                <input name="accountablePerson" value={form.accountablePerson} onChange={update} placeholder="Pangalan ng taong may pananagutan" required />
               </Field>
             </div>
           </section>
