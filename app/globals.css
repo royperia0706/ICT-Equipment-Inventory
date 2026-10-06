@@ -1109,10 +1109,30 @@ fieldset.lock-fields:disabled {
   gap: 6px;
 }
 
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+}
+
 .filter-btn {
   margin-top: 0;
   height: 46px;
 }
+
+.report-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+}
+
+.report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.report-head h2 { margin: 0; }
 
 .filter-note {
   grid-column: 1 / -1;

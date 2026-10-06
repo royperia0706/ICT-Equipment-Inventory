@@ -7,7 +7,7 @@ import { navigation } from "@/lib/navigation";
 
 const inventoryMenus = navigation.find((item) => item.label === "Inventory")?.children || [];
 
-export default function OfficeStationFilters({ locations = [], user, onFilter }) {
+export default function OfficeStationFilters({ locations = [], user, onFilter, onClear }) {
   const lockOffice = user?.role === "assistant-admin" || user?.role === "encoder";
   const lockStation = user?.role === "encoder";
   const region = useMemo(() => regionsIn(locations)[0] || regionName, [locations]);
@@ -25,6 +25,14 @@ export default function OfficeStationFilters({ locations = [], user, onFilter })
   }, [locations, office, region, lockStation, user?.station]);
   const activeStation = stations.length === 1 ? `${stations[0].unit}-${stations[0].name}` : stationId;
   const selected = stations.find((row) => `${row.unit}-${row.name}` === activeStation) || null;
+
+  function reset() {
+    setOffice(lockOffice ? (user?.unit || "") : "");
+    setStationId("");
+    setInventory("");
+    setStatus("");
+    onClear?.();
+  }
 
   return (
     <section className="panel-card dash-filters">
@@ -73,7 +81,10 @@ export default function OfficeStationFilters({ locations = [], user, onFilter })
           ))}
         </select>
       </label>
-      <button type="button" className="filter-btn" onClick={() => onFilter?.({ office, station: selected, inventory, status })}>Filter</button>
+      <div className="filter-actions">
+        <button type="button" className="filter-btn" onClick={() => onFilter?.({ office, station: selected, inventory, status })}>Filter</button>
+        {onClear ? <button type="button" className="filter-btn ghost" onClick={reset}>Clear</button> : null}
+      </div>
       <p className="filter-note">
         {selected
           ? `${officeLabel(selected.unit)} · ${selected.name} · ${selected.classification}`

@@ -212,6 +212,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
   }, [form.dateAcquired]);
   const listColumns = [
     ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
     ["equipmentType", "Equipment Type"],
     ["computerName", "Computer Name"],
     ["display", "Type of Monitor"],
@@ -250,6 +251,21 @@ export default function ComputerInventory({ initial = [], locations = [], user =
         province: value,
         office: unit || "",
         municipality: stations[0]?.name || "",
+      }));
+      return;
+    }
+    if (name === "equipmentType") {
+      setForm((current) => ({
+        ...current,
+        equipmentType: value,
+        ...(value === "Laptop"
+          ? { brand: "N/A", monitorBrand: "N/A" }
+          : current.equipmentType === "Laptop"
+            ? {
+              brand: current.brand === "N/A" ? "" : current.brand,
+              monitorBrand: current.monitorBrand === "N/A" ? "" : current.monitorBrand,
+            }
+            : {}),
       }));
       return;
     }
@@ -490,12 +506,16 @@ export default function ComputerInventory({ initial = [], locations = [], user =
               <Field label="Connectivity" required>
                 <Select name="connectivity" value={form.connectivity} onChange={update} options={connectivityOptions} required />
               </Field>
-              <Field label="System Unit/CPU Brand" required>
-                <input name="brand" value={form.brand} onChange={update} required />
-              </Field>
-              <Field label="Monitor Brand" required>
-                <input name="monitorBrand" value={form.monitorBrand} onChange={update} required />
-              </Field>
+              {form.equipmentType === "Laptop" ? null : (
+                <>
+                  <Field label="System Unit/CPU Brand" required>
+                    <input name="brand" value={form.brand} onChange={update} required />
+                  </Field>
+                  <Field label="Monitor Brand" required>
+                    <input name="monitorBrand" value={form.monitorBrand} onChange={update} required />
+                  </Field>
+                </>
+              )}
               <Field label="Date Manufacture" required>
                 <input name="dateManufacture" type="date" value={form.dateManufacture} onChange={update} required />
               </Field>

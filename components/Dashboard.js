@@ -219,7 +219,7 @@ export default function Dashboard({ kicker = "Dashboard", title = "Inventory ove
         <h1>{title}</h1>
       </header>
 
-      <OfficeStationFilters locations={locations} user={user} onFilter={onFilter} />
+      <OfficeStationFilters locations={locations} user={user} onFilter={onFilter} onClear={() => setApplied(null)} />
 
       {applied ? (
         <section className="panel-card filter-results">
