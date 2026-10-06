@@ -285,7 +285,7 @@ export default function RadioInventory({ initial = [], locations = [], user = nu
         </div>
         {mode === "list" ? (
           <div className="head-actions">
-            <MassUpload kind="radio" user={user} onLoaded={setRows} />
+            <MassUpload kind="radio" user={user} locations={locations} onLoaded={setRows} />
             <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}

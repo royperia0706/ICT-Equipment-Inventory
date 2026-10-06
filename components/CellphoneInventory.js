@@ -291,7 +291,7 @@ export default function CellphoneInventory({ initial = [], locations = [], user 
         </div>
         {mode === "list" ? (
           <div className="head-actions">
-            <MassUpload kind="cellphone" user={user} onLoaded={setRows} />
+            <MassUpload kind="cellphone" user={user} locations={locations} onLoaded={setRows} />
             <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}

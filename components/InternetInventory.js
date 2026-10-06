@@ -267,7 +267,7 @@ export default function InternetInventory({ initial = [], locations = [], user =
         </div>
         {mode === "list" ? (
           <div className="head-actions">
-            <MassUpload kind="internet" user={user} onLoaded={setRows} />
+            <MassUpload kind="internet" user={user} locations={locations} onLoaded={setRows} />
             <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}

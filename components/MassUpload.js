@@ -1,25 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { importKinds, templateColumns } from "@/lib/import-columns";
+import { importKinds } from "@/lib/import-columns";
+import { templateXml } from "@/lib/template-workbook";
 
-function xmlEscape(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function downloadTemplate(kind) {
+function downloadTemplate(kind, locations) {
   const spec = importKinds[kind];
-  const columns = templateColumns(kind);
-  const header = `<Row>${columns.map(([, label]) => `<Cell><Data ss:Type="String">${xmlEscape(label)}</Data></Cell>`).join("")}</Row>`;
-  const xml = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Worksheet ss:Name="${xmlEscape(spec.title)}"><Table>${header}</Table></Worksheet>
-</Workbook>`;
+  const xml = templateXml(kind, locations);
   const blob = new Blob([xml], { type: "application/vnd.ms-excel" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -29,7 +16,7 @@ function downloadTemplate(kind) {
   URL.revokeObjectURL(url);
 }
 
-export default function MassUpload({ kind, user, onLoaded }) {
+export default function MassUpload({ kind, user, locations = [], onLoaded }) {
   const spec = importKinds[kind];
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState(null);
@@ -137,8 +124,8 @@ export default function MassUpload({ kind, user, onLoaded }) {
               <h2>Mass upload</h2>
               <button className="ghost" type="button" onClick={closeModal} disabled={busy}>Close</button>
             </div>
-            <p className="hint">Upload an Excel file for {spec.title}. The system assigns the control number and entry date. Use up to 150 rows.</p>
-            <button className="ghost" type="button" onClick={() => downloadTemplate(kind)}>Download template</button>
+            <p className="hint">Upload an Excel file for {spec.title}. Dropdown fields use the same lists as the system. The system assigns the control number and entry date. Use up to 150 rows.</p>
+            <button className="ghost" type="button" onClick={() => downloadTemplate(kind, locations)}>Download template</button>
             <label>
               Excel file
               <input

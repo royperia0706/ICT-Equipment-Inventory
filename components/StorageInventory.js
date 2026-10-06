@@ -296,7 +296,7 @@ export default function StorageInventory({ initial = [], locations = [], user = 
         </div>
         {mode === "list" ? (
           <div className="head-actions">
-            <MassUpload kind="storage" user={user} onLoaded={setRows} />
+            <MassUpload kind="storage" user={user} locations={locations} onLoaded={setRows} />
             <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}

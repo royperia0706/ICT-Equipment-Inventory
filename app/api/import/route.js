@@ -1,6 +1,7 @@
 import { applyScope } from "@/lib/access";
 import { importKinds } from "@/lib/import-columns";
 import { rowToInput } from "@/lib/import-rows";
+import { choiceError } from "@/lib/template-lists";
 import { readUpload } from "@/lib/import-sheet";
 import { listLocations } from "@/lib/locations";
 import { requestDelete, saveEquipment } from "@/lib/review";
@@ -35,6 +36,8 @@ export async function POST(request) {
   const errors = [];
   for (let index = 0; index < parsed.length; index += 1) {
     try {
+      const choice = choiceError(kind, parsed[index].headers, parsed[index].row, locations);
+      if (choice) throw new Error(choice);
       inputs.push(rowToInput(kind, parsed[index].headers, parsed[index].row, locations));
     } catch (error) {
       errors.push({ row: index + 2, error: error.message || "Could not read this row." });

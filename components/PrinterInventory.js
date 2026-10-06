@@ -298,7 +298,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
         </div>
         {mode === "list" ? (
           <div className="head-actions">
-            <MassUpload kind="printer" user={user} onLoaded={setRows} />
+            <MassUpload kind="printer" user={user} locations={locations} onLoaded={setRows} />
             <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}
