@@ -1109,6 +1109,18 @@ fieldset.lock-fields:disabled {
   gap: 6px;
 }
 
+.head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.head-actions button { margin: 0; }
+
+.modal-card input[type="file"] {
+  font: inherit;
+}
+
 .filter-actions {
   display: flex;
   gap: 8px;

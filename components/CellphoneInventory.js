@@ -1,6 +1,7 @@
 "use client";
 
 import FocusableRow from "@/components/FocusableRow";
+import MassUpload from "@/components/MassUpload";
 import { PendingButtons, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
 import { cellphoneAcquisitions, cellphoneColumns, cellphoneTypes } from "@/lib/cellphone-fields";
@@ -289,7 +290,10 @@ export default function CellphoneInventory({ initial = [], locations = [], user 
           <h1>{title}</h1>
         </div>
         {mode === "list" ? (
-          <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
+          <div className="head-actions">
+            <MassUpload kind="cellphone" user={user} onLoaded={setRows} />
+            <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
+          </div>
         ) : null}
       </header>
 
