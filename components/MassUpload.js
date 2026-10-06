@@ -124,7 +124,7 @@ export default function MassUpload({ kind, user, locations = [], onLoaded }) {
               <h2>Mass upload</h2>
               <button className="ghost" type="button" onClick={closeModal} disabled={busy}>Close</button>
             </div>
-            <p className="hint">Upload an Excel file for {spec.title}. Dropdown fields use the same lists as the system. The system assigns the control number and entry date. Use up to 150 rows.</p>
+            <p className="hint">Upload an Excel file for {spec.title}. Dropdowns match the Add form. Choose Office first, then Station. The system assigns the control number and entry date. Use up to 150 rows.</p>
             <button className="ghost" type="button" onClick={() => downloadTemplate(kind, locations)}>Download template</button>
             <label>
               Excel file
