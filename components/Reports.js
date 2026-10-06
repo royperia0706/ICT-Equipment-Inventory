@@ -67,7 +67,18 @@ function previewValues(row) {
 
 function fieldValue(row, key) {
   if (key === "aging") return agingLabel(row.dateAcquired);
+  if (key === "province") return row.province || officeLabel(row.office || row.unit || "");
+  if (key === "municipality") return row.municipality || "";
   return row[key] || "";
+}
+
+function sheetColumns(columns) {
+  return columns.map(([key, label]) => {
+    if (key === "province") return [key, "Office"];
+    if (key === "municipality") return [key, "Station"];
+    if (key === "office") return [key, "Unit"];
+    return [key, label];
+  });
 }
 
 function xmlEscape(value) {
@@ -82,8 +93,9 @@ function downloadExcel(rows, inventory) {
   const chosen = inventory ? sheets.filter((sheet) => sheet.href === inventory) : sheets;
   const worksheets = chosen.length ? chosen.map((sheet) => {
     const items = rows.filter((row) => row.kind === sheet.kind);
-    const header = `<Row>${sheet.columns.map(([, label]) => `<Cell><Data ss:Type="String">${xmlEscape(label)}</Data></Cell>`).join("")}</Row>`;
-    const body = items.map((row) => `<Row>${sheet.columns.map(([key]) => `<Cell><Data ss:Type="String">${xmlEscape(fieldValue(row, key))}</Data></Cell>`).join("")}</Row>`).join("");
+    const columns = sheetColumns(sheet.columns);
+    const header = `<Row>${columns.map(([, label]) => `<Cell><Data ss:Type="String">${xmlEscape(label)}</Data></Cell>`).join("")}</Row>`;
+    const body = items.map((row) => `<Row>${columns.map(([key]) => `<Cell><Data ss:Type="String">${xmlEscape(fieldValue(row, key))}</Data></Cell>`).join("")}</Row>`).join("");
     return `<Worksheet ss:Name="${xmlEscape(sheet.name)}"><Table>${header}${body}</Table></Worksheet>`;
   }).join("") : `<Worksheet ss:Name="${xmlEscape((inventoryMenus.find((item) => item.href === inventory)?.label || "Report").replace(/[\\/?*[\]:]/g, " "))}"><Table><Row><Cell><Data ss:Type="String">No records</Data></Cell></Row></Table></Worksheet>`;
   const xml = `<?xml version="1.0"?>
@@ -194,7 +206,10 @@ export default function Reports({ locations = [], records = [], user }) {
       {rows ? (
         <section className="panel-card filter-results">
           <div className="report-head">
-            <h2>{rows.length} {rows.length === 1 ? "item" : "items"}</h2>
+            <div>
+              <h2>{rows.length} {rows.length === 1 ? "item" : "items"}</h2>
+              <p className="hint">Office: {office ? officeLabel(office) : "All Offices"} · Station: {selected ? selected.name : "All stations"}</p>
+            </div>
             <button type="button" className="filter-btn" onClick={() => downloadExcel(rows, inventory)}>Download Excel</button>
           </div>
           {rows.length === 0 ? <p className="hint">No equipment matches this report.</p> : (
