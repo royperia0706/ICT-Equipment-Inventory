@@ -1117,6 +1117,18 @@ fieldset.lock-fields:disabled {
 
 .head-actions button { margin: 0; }
 
+.prompt-back { z-index: 60; }
+
+.prompt-card {
+  width: min(460px, 100%);
+  padding-bottom: 22px;
+}
+
+.prompt-card p {
+  margin: 4px 0 18px;
+  font-size: 1.05rem;
+}
+
 .modal-card input[type="file"] {
   font: inherit;
 }

@@ -3,7 +3,7 @@ import { importKinds } from "@/lib/import-columns";
 import { rowToInput } from "@/lib/import-rows";
 import { readUpload } from "@/lib/import-sheet";
 import { listLocations } from "@/lib/locations";
-import { saveEquipment } from "@/lib/review";
+import { requestDelete, saveEquipment } from "@/lib/review";
 import { currentUser } from "@/lib/guard";
 import { json } from "@/lib/session";
 
@@ -31,16 +31,34 @@ export async function POST(request) {
   if (parsed.length > limit) return json({ ok: false, error: `Upload ${limit} rows at a time.` }, 400);
 
   const locations = await listLocations();
-  const errors = [];
-  let added = 0;
+  const inputs = [];
   for (let index = 0; index < parsed.length; index += 1) {
     try {
-      const input = rowToInput(kind, parsed[index].headers, parsed[index].row, locations);
-      await saveEquipment(kind, user, applyScope(user, input), null);
-      added += 1;
-    } catch (error) {
-      errors.push({ row: index + 2, error: error.message || "Could not save this row." });
+      inputs.push(rowToInput(kind, parsed[index].headers, parsed[index].row, locations));
+    } catch {
+      return json({ ok: false, mismatch: true }, 400);
     }
   }
-  return json({ ok: true, added, errors });
+
+  if (String(form.get("mode") || "") !== "save") {
+    return json({ ok: true, count: inputs.length });
+  }
+
+  const saved = [];
+  try {
+    for (const input of inputs) {
+      const result = await saveEquipment(kind, user, applyScope(user, input), null);
+      if (result?.record) saved.push(result.record);
+    }
+  } catch {
+    for (const record of saved.reverse()) {
+      try {
+        await requestDelete(kind, user, record);
+      } catch {
+        /* remove the rest of this batch */
+      }
+    }
+    return json({ ok: false, mismatch: true }, 400);
+  }
+  return json({ ok: true, added: saved.length, errors: [] });
 }

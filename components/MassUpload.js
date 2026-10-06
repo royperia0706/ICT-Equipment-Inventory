@@ -36,7 +36,24 @@ export default function MassUpload({ kind, user, onLoaded }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [prompt, setPrompt] = useState("");
   if (user?.role !== "super-admin" || !spec) return null;
+
+  function closeModal() {
+    if (busy) return;
+    setOpen(false);
+    setPrompt("");
+  }
+
+  async function sendFile(mode) {
+    const body = new FormData();
+    body.set("kind", kind);
+    body.set("mode", mode);
+    body.set("file", file);
+    const response = await fetch("/api/import", { method: "POST", body });
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+  }
 
   async function upload(event) {
     event.preventDefault();
@@ -47,26 +64,42 @@ export default function MassUpload({ kind, user, onLoaded }) {
     setBusy(true);
     setError("");
     setMessage("");
+    setPrompt("");
     try {
-      const body = new FormData();
-      body.set("kind", kind);
-      body.set("file", file);
-      const response = await fetch("/api/import", { method: "POST", body });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(data.error || "Could not upload the file.");
+      const { response, data } = await sendFile("check");
+      if (data.mismatch) {
+        setPrompt("mismatch");
         return;
       }
-      const failed = data.errors?.length || 0;
-      setMessage(failed
-        ? `Uploaded ${data.added}. ${failed} ${failed === 1 ? "row" : "rows"} failed.`
-        : `Uploaded ${data.added}.`);
-      if (failed) setError(data.errors.slice(0, 8).map((item) => `Row ${item.row}: ${item.error}`).join(" "));
+      if (!response.ok) {
+        setError(data.error || "Could not read the file.");
+        return;
+      }
+      setPrompt("confirm");
+    } catch {
+      setError("Could not read the file.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveUpload() {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const { response, data } = await sendFile("save");
+      if (data.mismatch || !response.ok) {
+        setPrompt("mismatch");
+        return;
+      }
+      setPrompt("");
+      setMessage(`Uploaded ${data.added}.`);
       const listed = await fetch(spec.reload).then((result) => result.json());
       if (Array.isArray(listed[spec.listKey])) onLoaded(listed[spec.listKey]);
       setFile(null);
     } catch {
-      setError("Could not upload the file.");
+      setPrompt("mismatch");
     } finally {
       setBusy(false);
     }
@@ -74,13 +107,13 @@ export default function MassUpload({ kind, user, onLoaded }) {
 
   return (
     <>
-      <button className="ghost" type="button" onClick={() => { setOpen(true); setError(""); setMessage(""); }}>Mass upload</button>
+      <button className="ghost" type="button" onClick={() => { setOpen(true); setError(""); setMessage(""); setPrompt(""); }}>Mass upload</button>
       {open ? (
-        <div className="modal-back" role="presentation" onClick={() => { if (!busy) setOpen(false); }}>
+        <div className="modal-back" role="presentation" onClick={closeModal}>
           <form className="modal-card" onClick={(event) => event.stopPropagation()} onSubmit={upload}>
             <div className="modal-head">
               <h2>Mass upload</h2>
-              <button className="ghost" type="button" onClick={() => setOpen(false)} disabled={busy}>Close</button>
+              <button className="ghost" type="button" onClick={closeModal} disabled={busy}>Close</button>
             </div>
             <p className="hint">Upload an Excel file for {spec.title}. The system assigns the control number and entry date. Use up to 150 rows.</p>
             <button className="ghost" type="button" onClick={() => downloadTemplate(kind)}>Download template</button>
@@ -94,8 +127,28 @@ export default function MassUpload({ kind, user, onLoaded }) {
             </label>
             {message ? <p className="hint">{message}</p> : null}
             {error ? <p className="error" role="alert">{error}</p> : null}
-            <button type="submit" disabled={busy}>{busy ? "Uploading…" : "Upload"}</button>
+            <button type="submit" disabled={busy}>{busy ? "Reading…" : "Upload"}</button>
           </form>
+          {prompt ? (
+            <div className="modal-back prompt-back" role="presentation" onClick={(event) => event.stopPropagation()}>
+              <div className="modal-card prompt-card" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+                {prompt === "confirm" ? (
+                  <>
+                    <p>Do you want to upload data?</p>
+                    <div className="filter-actions">
+                      <button type="button" onClick={saveUpload} disabled={busy}>{busy ? "Uploading…" : "Upload"}</button>
+                      <button className="ghost" type="button" onClick={() => setPrompt("")} disabled={busy}>Cancel</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>Database did not match. Update your data and try again</p>
+                    <button type="button" onClick={() => setPrompt("")}>Ok</button>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>
