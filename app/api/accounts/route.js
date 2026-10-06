@@ -1,6 +1,6 @@
 import { currentUser } from "@/lib/guard";
 import { json } from "@/lib/session";
-import { addAccount, decideAccount, editAccount, removeAccount, unblockAccount } from "@/lib/users";
+import { addAccount, deactivateAccount, decideAccount, editAccount, removeAccount, resetAccountPassword, showAccountPassword, unblockAccount } from "@/lib/users";
 
 async function actor() {
   return currentUser();
@@ -17,6 +17,18 @@ export async function POST(request) {
   try {
     if (body.action === "unblock") {
       const result = await unblockAccount(user, body.username);
+      return json({ ok: true, ...result });
+    }
+    if (body.action === "reset-password") {
+      const result = await resetAccountPassword(user, body.username);
+      return json({ ok: true, ...result });
+    }
+    if (body.action === "deactivate") {
+      const result = await deactivateAccount(user, body.username);
+      return json({ ok: true, ...result });
+    }
+    if (body.action === "show-password") {
+      const result = await showAccountPassword(user, body.username);
       return json({ ok: true, ...result });
     }
     if (body.decision) {

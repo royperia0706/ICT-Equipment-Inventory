@@ -1,7 +1,7 @@
 "use client";
 
 import FocusableRow from "@/components/FocusableRow";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 const accessOptions = ["Encoder", "Assistant Admin", "Super Admin"];
@@ -29,6 +29,101 @@ function canManage(user) {
   return user?.role === "assistant-admin" || user?.role === "super-admin";
 }
 
+function GearIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm9 2.7-.9-.2a7.2 7.2 0 0 0-.6-1.5l.6-.7a1 1 0 0 0-.1-1.4l-1.1-1.1a1 1 0 0 0-1.4-.1l-.7.6a7.2 7.2 0 0 0-1.5-.6L15.1 4a1 1 0 0 0-1-1h-1.6a1 1 0 0 0-1 .8l-.2.9a7.2 7.2 0 0 0-1.5.6l-.7-.6a1 1 0 0 0-1.4.1L6.6 6.9a1 1 0 0 0-.1 1.4l.6.7a7.2 7.2 0 0 0-.6 1.5l-.9.2a1 1 0 0 0-.8 1v1.6a1 1 0 0 0 .8 1l.9.2c.1.5.3 1 .6 1.5l-.6.7a1 1 0 0 0 .1 1.4l1.1 1.1a1 1 0 0 0 1.4.1l.7-.6c.5.3 1 .5 1.5.6l.2.9a1 1 0 0 0 1 .8h1.6a1 1 0 0 0 1-.8l.2-.9c.5-.1 1-.3 1.5-.6l.7.6a1 1 0 0 0 1.4-.1l1.1-1.1a1 1 0 0 0 .1-1.4l-.6-.7c.3-.5.5-1 .6-1.5l.9-.2a1 1 0 0 0 .8-1v-1.6a1 1 0 0 0-.8-1Z" />
+    </svg>
+  );
+}
+
+function MenuIcon({ name }) {
+  const paths = {
+    edit: "M4 16.5V20h3.5L18.8 8.7l-3.5-3.5L4 16.5Zm15.7-9.2a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0l-1.2 1.2 3.5 3.5 1.1-1.1Z",
+    reset: "M12 6V3L7 8l5 5V10a5 5 0 1 1-5 5H5a7 7 0 1 0 7-9Z",
+    deactivate: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-6 9a6 6 0 0 1 9.5-4.8L7.2 15.5A6 6 0 0 1 6 12Zm3.5 4.8 8.3-8.3A6 6 0 0 1 9.5 16.8Z",
+    show: "M12 6c-5 0-8.5 4.2-9.5 6 1 1.8 4.5 6 9.5 6s8.5-4.2 9.5-6c-1-1.8-4.5-6-9.5-6Zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z",
+    approve: "M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z",
+    reject: "M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3 1.4 1.4Z",
+  };
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d={paths[name]} />
+    </svg>
+  );
+}
+
+function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onShow, onDecide }) {
+  const [open, setOpen] = useState(false);
+  const [place, setPlace] = useState(null);
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
+  const allowed = canChange(user, account);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    function close(event) {
+      if (buttonRef.current?.contains(event.target) || menuRef.current?.contains(event.target)) return;
+      setOpen(false);
+    }
+    function onKey(event) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function toggle() {
+    const rect = buttonRef.current.getBoundingClientRect();
+    const below = window.innerHeight - rect.bottom;
+    setPlace({
+      right: Math.max(8, window.innerWidth - rect.right),
+      top: below < 220 ? rect.top - 8 : rect.bottom + 6,
+      upward: below < 220,
+    });
+    setOpen((current) => !current);
+  }
+
+  if (!allowed) return "—";
+
+  return (
+    <div className="account-action">
+      <button ref={buttonRef} className="action-btn" type="button" onClick={toggle} disabled={busy}>
+        <GearIcon />
+        Action
+        <span className="action-caret" aria-hidden="true" />
+      </button>
+      {open && place ? (
+        <div
+          ref={menuRef}
+          className="action-menu"
+          style={{
+            right: place.right,
+            top: place.upward ? "auto" : place.top,
+            bottom: place.upward ? window.innerHeight - place.top : "auto",
+          }}
+        >
+          <button type="button" onClick={() => { setOpen(false); onEdit(account); }}><MenuIcon name="edit" />Edit</button>
+          <button type="button" onClick={() => { setOpen(false); onReset(account); }}><MenuIcon name="reset" />Reset Password</button>
+          <button type="button" onClick={() => { setOpen(false); onDeactivate(account); }}><MenuIcon name="deactivate" />Deactivate</button>
+          <button type="button" onClick={() => { setOpen(false); onShow(account); }}><MenuIcon name="show" />Show Password</button>
+          {user.role === "super-admin" && account.pendingAction ? (
+            <>
+              <button type="button" onClick={() => { setOpen(false); onDecide(account, "approve"); }}><MenuIcon name="approve" />Approve</button>
+              <button type="button" onClick={() => { setOpen(false); onDecide(account, "reject"); }}><MenuIcon name="reject" />Reject</button>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+      {account.pendingAction ? <p className="pending-note">Pending Super Admin approval</p> : null}
+    </div>
+  );
+}
+
 function canChange(user, account) {
   if (!canManage(user) || !account) return false;
   if (account.role === "super-admin" && user.role !== "super-admin") return false;
@@ -45,6 +140,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [issued, setIssued] = useState(null);
+  const [shown, setShown] = useState(null);
   const manager = canManage(user);
   const region = regionsIn(locations)[0] || "PRO 4A - CALABARZON";
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
@@ -153,54 +249,52 @@ export default function AccountsView({ accounts = [], user = null, locations = [
     }
   }
 
-  async function remove(account) {
-    const question = user?.role === "assistant-admin"
-      ? `Submit ${account.username} for deletion? A Super Admin must approve it.`
-      : `Delete ${account.username}?`;
-    if (!window.confirm(question)) return;
-    setError("");
-    setNotice("");
-    const response = await fetch(`/api/accounts?username=${encodeURIComponent(account.username)}`, { method: "DELETE" });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setError(data.error || "Could not delete this account.");
-      return;
-    }
-    if (data.pending && data.account) {
-      applyResult(data);
-      setNotice("Delete submitted. A Super Admin must approve it.");
-      return;
-    }
-    setRows((current) => current.filter((row) => row.username !== account.username));
-  }
-
   function statusText(account) {
     if (account.pendingAction === "edit") {
       return `Pending · edit to ${account.pendingStation || account.station} (${account.pendingAccess || account.access})`;
     }
     if (account.pendingAction) return `Pending · ${account.pendingAction}`;
-    if (account.blocked) return "Blocked";
+    if (account.blocked) return "Deactivated";
     if (account.mustChangePassword) return "Password reset";
     return "Active";
   }
 
-  async function unblock(account) {
-    if (!window.confirm(`Unblock ${account.username}? The password will be reset, and they must choose a new one at the next sign-in.`)) return;
+  async function accountAction(account, action) {
     setError("");
     setNotice("");
-    setIssued(null);
     const response = await fetch("/api/accounts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: account.username, action: "unblock" }),
+      body: JSON.stringify({ username: account.username, action }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setError(data.error || "Could not unblock this account.");
-      return;
+      setError(data.error || "Could not update this account.");
+      return null;
     }
-    applyResult(data);
+    if (data.account) applyResult(data);
+    return data;
+  }
+
+  async function resetPassword(account) {
+    if (!window.confirm(`Reset the password for ${account.username}?`)) return;
+    setIssued(null);
+    const data = await accountAction(account, "reset-password");
+    if (!data) return;
     setIssued({ username: account.username, password: data.temporaryPassword });
+    setNotice("Password reset. They must set a new password at the next sign-in.");
+  }
+
+  async function deactivate(account) {
+    if (!window.confirm(`Deactivate ${account.username}? They will not be able to sign in.`)) return;
+    const data = await accountAction(account, "deactivate");
+    if (data) setNotice("Account deactivated.");
+  }
+
+  async function showPassword(account) {
+    const data = await accountAction(account, "show-password");
+    if (!data) return;
+    setShown({ username: data.username || account.username, password: data.password || "" });
   }
 
   async function decide(account, decision) {
@@ -244,7 +338,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
           {notice ? <p className="hint">{notice}</p> : null}
           {issued ? (
             <p className="banner" role="status">
-              {issued.username} is unblocked. Temporary password: <strong>{issued.password}</strong>. They must set a new password at the next sign-in.
+              Password for {issued.username}: <strong>{issued.password}</strong>. They must set a new password at the next sign-in.
             </p>
           ) : null}
           {rows.length === 0 ? (
@@ -254,52 +348,56 @@ export default function AccountsView({ accounts = [], user = null, locations = [
               <table className="computer-table">
                 <thead>
                   <tr>
-                    {manager ? <th className="freeze">Actions</th> : null}
                     <th>Status</th>
                     <th>Office / Station</th>
                     <th>Classification</th>
                     <th>Username</th>
                     <th>Access</th>
                     <th>Office group</th>
+                    {manager ? <th className="action-col">Action</th> : null}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((account) => (
                     <FocusableRow key={account.username} focusKey={account.username}>
-                      {manager ? (
-                        <td className="freeze">
-                          {canChange(user, account) ? (
-                            <div className="row-actions">
-                              <button className="row-btn" type="button" onClick={() => openEdit(account)}>Edit</button>
-                              {account.blocked ? (
-                                <button className="row-btn" type="button" onClick={() => unblock(account)}>Unblock</button>
-                              ) : null}
-                              {account.username !== user.username && account.role === "super-admin" ? (
-                                <button className="row-btn danger" type="button" onClick={() => remove(account)}>Delete</button>
-                              ) : null}
-                              {user.role === "super-admin" && account.pendingAction ? (
-                                <>
-                                  <button className="row-btn" type="button" onClick={() => decide(account, "approve")}>Approve</button>
-                                  <button className="row-btn danger" type="button" onClick={() => decide(account, "reject")}>Reject</button>
-                                </>
-                              ) : null}
-                            </div>
-                          ) : "—"}
-                          {account.pendingAction ? <p className="pending-note">Pending Super Admin approval</p> : null}
-                        </td>
-                      ) : null}
                       <td>{statusText(account)}</td>
                       <td>{account.displayName}</td>
                       <td>{account.classification}</td>
                       <td>{account.username}</td>
                       <td>{account.access}</td>
                       <td>{account.unit}</td>
+                      {manager ? (
+                        <td className="action-col">
+                          <AccountMenu
+                            account={account}
+                            user={user}
+                            busy={busy}
+                            onEdit={openEdit}
+                            onReset={resetPassword}
+                            onDeactivate={deactivate}
+                            onShow={showPassword}
+                            onDecide={decide}
+                          />
+                        </td>
+                      ) : null}
                     </FocusableRow>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+          {shown ? (
+            <div className="modal-back" role="presentation" onClick={() => setShown(null)}>
+              <div className="modal-card prompt-card" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+                <p>
+                  {shown.password
+                    ? <>Password for {shown.username}: <strong>{shown.password}</strong></>
+                    : <>The password for {shown.username} is hidden. Use Reset Password to issue a new one.</>}
+                </p>
+                <button type="button" onClick={() => setShown(null)}>Ok</button>
+              </div>
+            </div>
+          ) : null}
         </section>
       ) : (
         <form className="computer-form" onSubmit={onSubmit}>
