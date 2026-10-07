@@ -1227,6 +1227,11 @@ fieldset.lock-fields:disabled {
   grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
 }
 
+.account-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  margin-bottom: 16px;
+}
+
 .report-head {
   display: flex;
   justify-content: space-between;

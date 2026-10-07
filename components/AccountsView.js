@@ -155,6 +155,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   const [busy, setBusy] = useState(false);
   const [issued, setIssued] = useState(null);
   const [shown, setShown] = useState(null);
+  const [filters, setFilters] = useState({ unit: "", classification: "", station: "" });
   const manager = canManage(user);
   const region = regionsIn(locations)[0] || "PRO 4A - CALABARZON";
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
@@ -167,6 +168,44 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   }, [locations, form.unit, form.station, form.classification]);
   const officeChoices = form.unit && !offices.includes(form.unit) ? [form.unit, ...offices] : offices;
   const choices = user?.role === "assistant-admin" ? ["Encoder"] : accessOptions;
+  const filterOffices = useMemo(
+    () => [...new Set(rows.map((account) => account.unit).filter(Boolean))].sort((a, b) => officeLabel(a).localeCompare(officeLabel(b))),
+    [rows],
+  );
+  const filterClassifications = useMemo(
+    () => [...new Set(rows
+      .filter((account) => !filters.unit || account.unit === filters.unit)
+      .map((account) => account.classification)
+      .filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b)),
+    [rows, filters.unit],
+  );
+  const filterStations = useMemo(
+    () => [...new Set(rows
+      .filter((account) => !filters.unit || account.unit === filters.unit)
+      .filter((account) => !filters.classification || account.classification === filters.classification)
+      .map((account) => account.station || account.displayName)
+      .filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b)),
+    [rows, filters.unit, filters.classification],
+  );
+  const filteredRows = useMemo(
+    () => rows.filter((account) => (
+      (!filters.unit || account.unit === filters.unit)
+      && (!filters.classification || account.classification === filters.classification)
+      && (!filters.station || (account.station || account.displayName) === filters.station)
+    )),
+    [rows, filters],
+  );
+
+  function updateFilter(event) {
+    const { name, value } = event.target;
+    setFilters((current) => {
+      if (name === "unit") return { unit: value, classification: "", station: "" };
+      if (name === "classification") return { ...current, classification: value, station: "" };
+      return { ...current, [name]: value };
+    });
+  }
 
   function update(event) {
     const { name, value } = event.target;
@@ -364,31 +403,57 @@ export default function AccountsView({ accounts = [], user = null, locations = [
               Password for {issued.username}: <strong>{issued.password}</strong>. They must set a new password at the next sign-in.
             </p>
           ) : null}
+          <div className="dash-filters account-filters">
+            <label>
+              Office
+              <select name="unit" value={filters.unit} onChange={updateFilter}>
+                <option value="">All Offices</option>
+                {filterOffices.map((unit) => <option key={unit} value={unit}>{officeLabel(unit)}</option>)}
+              </select>
+            </label>
+            <label>
+              Classification
+              <select name="classification" value={filters.classification} onChange={updateFilter}>
+                <option value="">All Classifications</option>
+                {filterClassifications.map((classification) => <option key={classification} value={classification}>{classification}</option>)}
+              </select>
+            </label>
+            <label>
+              Station
+              <select name="station" value={filters.station} onChange={updateFilter}>
+                <option value="">All Stations</option>
+                {filterStations.map((station) => <option key={station} value={station}>{station}</option>)}
+              </select>
+            </label>
+            <button className="ghost filter-btn" type="button" onClick={() => setFilters({ unit: "", classification: "", station: "" })}>Clear</button>
+          </div>
           {rows.length === 0 ? (
             <p className="hint">No accounts are loaded yet.</p>
+          ) : filteredRows.length === 0 ? (
+            <p className="hint">No accounts match the selected filters.</p>
           ) : (
             <div className="computer-table-wrap">
               <table className="computer-table">
                 <thead>
                   <tr>
                     <th>Status</th>
-                    <th>Office / Station</th>
+                    <th>Office</th>
+                    <th>Station</th>
                     <th>Classification</th>
                     <th>Username</th>
                     <th>Access</th>
-                    <th>Office group</th>
                     {manager ? <th className="action-col">Action</th> : null}
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((account) => (
+                  {filteredRows.map((account) => (
                     <FocusableRow key={account.username} focusKey={account.username}>
                       <td>{statusText(account)}</td>
-                      <td>{account.displayName}</td>
+                      <td>{officeLabel(account.unit) || account.province || account.unit}</td>
+                      <td>{account.station || account.displayName}</td>
                       <td>{account.classification}</td>
                       <td>{account.username}</td>
                       <td>{account.access}</td>
-                      <td>{account.unit}</td>
                       {manager ? (
                         <td className="action-col">
                           <AccountMenu
