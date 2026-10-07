@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 
 const accessOptions = ["Encoder", "Assistant Admin", "Super Admin"];
+const statusOptions = ["Active", "Inactive", "Deactivated"];
 
 const emptyForm = {
   username: "",
@@ -14,6 +15,7 @@ const emptyForm = {
   displayName: "",
   classification: "",
   access: "",
+  status: "Active",
 };
 
 function Field({ label, required, children }) {
@@ -218,6 +220,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
       displayName: account.displayName,
       classification: account.classification,
       access: account.access,
+      status: account.status || (account.blocked ? "Deactivated" : "Active"),
     });
     setError("");
     setMode("form");
@@ -262,10 +265,8 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   }
 
   function statusText(account) {
-    if (account.pendingAction) return "On hold";
     if (account.blocked) return "Deactivated";
-    if (account.mustChangePassword) return "Password reset";
-    return "Active";
+    return statusOptions.includes(account.status) ? account.status : "Active";
   }
 
   async function accountAction(account, action) {
@@ -455,6 +456,11 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                 <select name="access" value={form.access} onChange={update} required>
                   <option value="">--Select--</option>
                   {choices.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </Field>
+              <Field label="Status" required>
+                <select name="status" value={form.status} onChange={update} required>
+                  {statusOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
               </Field>
             </div>

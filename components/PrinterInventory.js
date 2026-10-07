@@ -1,19 +1,29 @@
 "use client";
 
-import AddButton from "@/components/AddButton";
 import FocusableRow from "@/components/FocusableRow";
+import InventoryActionMenu from "@/components/InventoryActionMenu";
 import MassUpload from "@/components/MassUpload";
-import { CancelEditButton, PendingButtons, PendingNotes } from "@/components/PendingActions";
+import { CancelEditButton, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
-import { agingLabel, columnsWithAging } from "@/lib/aging";
+import { agingLabel } from "@/lib/aging";
 import { acquireYears, conditionsByStatus, statuses } from "@/lib/computer-fields";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
 import {
   colorCapabilities,
   connectionTypes,
   printerAcquisitions,
-  printerColumns,
 } from "@/lib/printer-fields";
+
+const listColumns = [
+  ["controlNumber", "Control Number"],
+  ["entryDate", "Entry Date"],
+  ["province", "Office"],
+  ["municipality", "Station"],
+  ["printerType", "Printer Type"],
+  ["brand", "Brand"],
+  ["model", "Model"],
+  ["aging", "Aging"],
+];
 
 const emptyForm = {
   printerType: "",
@@ -149,8 +159,6 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
       })
       .catch(() => {});
   }, [mode, form.municipality, form.office]);
-
-  const columns = useMemo(() => columnsWithAging(printerColumns), []);
 
   function needsApproval() {
     const ber = /^(for\s*ber|ber)$/i.test(form.status) || /^(for\s*ber|ber)$/i.test(form.condition);
@@ -310,7 +318,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
         {mode === "list" ? (
           <div className="head-actions">
             <MassUpload kind="printer" user={user} locations={locations} onLoaded={setRows} />
-            <AddButton onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }} />
+            <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}
       </header>
@@ -326,14 +334,14 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
               <table className="computer-table">
                 <thead>
                   <tr>
-                    {columns.map(([key, label]) => <th key={key}>{label}</th>)}
+                    {listColumns.map(([key, label]) => <th key={key}>{label}</th>)}
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <FocusableRow key={row.id || row.controlNumber} focusKey={row.controlNumber || row.id}>
-                      {columns.map(([key]) => (
+                      {listColumns.map(([key]) => (
                         <td key={key}>
                           {key === "aging"
                             ? agingLabel(row.dateAcquired)
@@ -343,14 +351,17 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                         </td>
                       ))}
                       <td>
-                        <div className="row-actions">
-                          <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
-                          {user?.role === "encoder" ? null : (
-                            <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
-                          )}
-                          <PendingButtons user={user} row={row} onDecide={decide} />
-                          <CancelEditButton user={user} row={row} api="/api/printers" recordKey="printer" onDone={applyCancel} />
-                        </div>
+                        <InventoryActionMenu
+                          user={user}
+                          row={row}
+                          busy={busy}
+                          onEdit={editRow}
+                          onDelete={removeRow}
+                          onDecide={decide}
+                          cancelApi="/api/printers"
+                          recordKey="printer"
+                          onCancelDone={applyCancel}
+                        />
                         <PendingNotes row={row} />
                       </td>
                     </FocusableRow>

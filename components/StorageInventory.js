@@ -1,13 +1,24 @@
 "use client";
 
-import AddButton from "@/components/AddButton";
 import FocusableRow from "@/components/FocusableRow";
+import InventoryActionMenu from "@/components/InventoryActionMenu";
 import MassUpload from "@/components/MassUpload";
-import { CancelEditButton, PendingButtons, PendingNotes } from "@/components/PendingActions";
+import { CancelEditButton, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
+import { agingLabel } from "@/lib/aging";
 import { acquireYears, conditionsByStatus, statuses, storageUnits } from "@/lib/computer-fields";
 import { officeLabel, officesIn, regionsIn, stationsIn } from "@/lib/location-choices";
-import { storageAcquisitions, storageColumns, storageTechnologies } from "@/lib/storage-fields";
+import { storageAcquisitions, storageTechnologies } from "@/lib/storage-fields";
+
+const listColumns = [
+  ["controlNumber", "Control Number"],
+  ["entryDate", "Entry Date"],
+  ["province", "Office"],
+  ["municipality", "Station"],
+  ["storageType", "Storage Type"],
+  ["brand", "Brand"],
+  ["aging", "Aging"],
+];
 
 const emptyForm = {
   storageType: "",
@@ -308,7 +319,7 @@ export default function StorageInventory({ initial = [], locations = [], user = 
         {mode === "list" ? (
           <div className="head-actions">
             <MassUpload kind="storage" user={user} locations={locations} onLoaded={setRows} />
-            <AddButton onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }} />
+            <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}
       </header>
@@ -324,29 +335,34 @@ export default function StorageInventory({ initial = [], locations = [], user = 
               <table className="computer-table">
                 <thead>
                   <tr>
-                    {storageColumns.map(([key, label]) => <th key={key}>{label}</th>)}
+                    {listColumns.map(([key, label]) => <th key={key}>{label}</th>)}
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
                     <FocusableRow key={row.id || row.controlNumber} focusKey={row.controlNumber || row.id}>
-                      {storageColumns.map(([key]) => (
+                      {listColumns.map(([key]) => (
                         <td key={key}>
-                          {key === "status" && row.status === "Pending" && row.pendingStatus
+                          {key === "aging"
+                            ? agingLabel(row.dateAcquired)
+                            : key === "status" && row.status === "Pending" && row.pendingStatus
                             ? `Pending · ${row.pendingStatus}`
                             : row[key] || "—"}
                         </td>
                       ))}
                       <td>
-                        <div className="row-actions">
-                          <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
-                          {user?.role === "encoder" ? null : (
-                            <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
-                          )}
-                          <PendingButtons user={user} row={row} onDecide={decide} />
-                          <CancelEditButton user={user} row={row} api="/api/storages" recordKey="storage" onDone={applyCancel} />
-                        </div>
+                        <InventoryActionMenu
+                          user={user}
+                          row={row}
+                          busy={busy}
+                          onEdit={editRow}
+                          onDelete={removeRow}
+                          onDecide={decide}
+                          cancelApi="/api/storages"
+                          recordKey="storage"
+                          onCancelDone={applyCancel}
+                        />
                         <PendingNotes row={row} />
                       </td>
                     </FocusableRow>

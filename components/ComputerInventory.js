@@ -1,9 +1,9 @@
 "use client";
 
-import AddButton from "@/components/AddButton";
 import FocusableRow from "@/components/FocusableRow";
+import InventoryActionMenu from "@/components/InventoryActionMenu";
 import MassUpload from "@/components/MassUpload";
-import { CancelEditButton, PendingButtons, PendingNotes } from "@/components/PendingActions";
+import { CancelEditButton, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
 import {
   acquisitions,
@@ -410,7 +410,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
         {mode === "list" ? (
           <div className="head-actions">
             <MassUpload kind="computer" user={user} locations={locations} onLoaded={setRows} />
-            <AddButton onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }} />
+            <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
           </div>
         ) : null}
       </header>
@@ -452,15 +452,18 @@ export default function ComputerInventory({ initial = [], locations = [], user =
                         <td key={key}>{cellValue(row, key)}</td>
                       ))}
                       <td>
-                        <div className="row-actions">
-                          <button className="row-btn" type="button" onClick={() => editRow(row)}>Edit</button>
-                          {user?.role === "encoder" ? null : (
-                            <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
-                          )}
-                          <button className="row-btn" type="button" onClick={() => { setViewing(row); setMode("view"); }}>View data</button>
-                          <PendingButtons user={user} row={row} onDecide={decide} />
-                          <CancelEditButton user={user} row={row} api="/api/computers" recordKey="computer" onDone={applyCancel} />
-                        </div>
+                        <InventoryActionMenu
+                          user={user}
+                          row={row}
+                          busy={busy}
+                          onEdit={editRow}
+                          onDelete={removeRow}
+                          onView={(item) => { setViewing(item); setMode("view"); }}
+                          onDecide={decide}
+                          cancelApi="/api/computers"
+                          recordKey="computer"
+                          onCancelDone={applyCancel}
+                        />
                         <PendingNotes row={row} />
                       </td>
                     </FocusableRow>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ChangeNotes from "@/components/ChangeNotes";
-import { approverLabel, canDecideChanges, canDecideEditRequest } from "@/lib/approval-access";
+import { approverLabel } from "@/lib/approval-access";
 
 function kindName(row) {
   return row?.kind || "equipment";
@@ -17,45 +17,6 @@ export function decisionText(row, decision, target) {
   else if (row?.pendingAction === "delete") action = `delete ${kind}`;
   else if (row?.pendingAction === "ber" || row?.pendingStatus || row?.pendingPayload?.status) action = `edit ${kind} status`;
   return `You ${verb} the request of ${station} on ${action}`;
-}
-
-function DecisionPrompt({ message, onClose }) {
-  if (!message) return null;
-  return (
-    <div className="modal-back prompt-back" role="presentation">
-      <div className="modal-card prompt-card" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-        <p>{message}</p>
-        <button type="button" onClick={onClose}>Ok</button>
-      </div>
-    </div>
-  );
-}
-
-export function PendingButtons({ user, row, onDecide }) {
-  const [prompt, setPrompt] = useState("");
-
-  async function run(decision, target) {
-    const ok = await onDecide(row, decision, target);
-    if (ok) setPrompt(decisionText(row, decision, target));
-  }
-
-  return (
-    <>
-      {canDecideEditRequest(user, row) ? (
-        <>
-          <button className="row-btn" type="button" onClick={() => run("approve", "edit-request")}>Accept edit</button>
-          <button className="row-btn danger" type="button" onClick={() => run("reject", "edit-request")}>Reject edit</button>
-        </>
-      ) : null}
-      {canDecideChanges(user, row) ? (
-        <>
-          <button className="row-btn" type="button" onClick={() => run("approve", "changes")}>Approve</button>
-          <button className="row-btn danger" type="button" onClick={() => run("reject", "changes")}>Reject</button>
-        </>
-      ) : null}
-      <DecisionPrompt message={prompt} onClose={() => setPrompt("")} />
-    </>
-  );
 }
 
 export function CancelEditButton({ user, row, api, recordKey, onDone, variant = "row" }) {
