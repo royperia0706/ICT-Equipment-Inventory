@@ -539,18 +539,21 @@ button:disabled { opacity: 0.6; cursor: wait; }
   text-align: center;
   font-size: 18px;
 }
+.approval-card { background: #fff; }
 .approval-list {
   list-style: none;
   margin: 8px 0 0;
   padding: 0;
+  background: #fff;
 }
 .approval-list li {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: center;
-  padding: 12px 0;
+  padding: 12px;
   border-top: 1px solid var(--line);
+  background: #fff;
 }
 .approval-list span { color: var(--muted); font-size: 13px; }
 .pop-empty { margin: 4px 8px 8px; color: var(--muted); font-size: 13px; }
@@ -979,7 +982,7 @@ fieldset.lock-fields:disabled {
   gap: 10px;
 }
 
-.computer-table-wrap { overflow: auto; }
+.computer-table-wrap { overflow: auto; background: #fff; }
 
 .computer-table {
   width: max-content;
@@ -987,6 +990,7 @@ fieldset.lock-fields:disabled {
   border-collapse: separate;
   border-spacing: 0;
   font-size: 14px;
+  background: #fff;
 }
 
 .computer-table th,
@@ -995,6 +999,7 @@ fieldset.lock-fields:disabled {
   border-bottom: 1px solid var(--line);
   text-align: left;
   white-space: nowrap;
+  background: #fff;
 }
 
 .computer-table th {
@@ -1002,10 +1007,10 @@ fieldset.lock-fields:disabled {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
-  background: #f7f4ee;
+  background: #fff;
 }
 
-.computer-table tbody tr:hover { background: #f6f3ec; }
+.computer-table tbody tr:hover td { background: #f4f7f8; }
 
 .computer-table .freeze {
   position: sticky;
@@ -1083,10 +1088,12 @@ fieldset.lock-fields:disabled {
 
 .computer-table thead .freeze {
   z-index: 3;
-  background: #f7f4ee;
+  background: #fff;
 }
 
-.computer-table tbody tr:hover .freeze { background: #f6f3ec; }
+.computer-table tbody tr:hover .freeze { background: #f4f7f8; }
+
+.computer-table tbody tr.row-focus td { background: #fff3c4; }
 
 .pending-note {
   margin: 6px 0 0;

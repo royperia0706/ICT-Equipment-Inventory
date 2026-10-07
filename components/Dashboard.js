@@ -24,7 +24,7 @@ const columnsByKind = {
   Storage: storageColumns,
 };
 
-const hiddenDetailKeys = new Set(["id", "createdAt", "updatedAt", "kind", "unit", "office", "capacityValue", "capacityUnit", "ssdValue", "ssdUnit", "hddValue", "hddUnit"]);
+const hiddenDetailKeys = new Set(["id", "createdAt", "updatedAt", "kind", "unit", "office", "capacityValue", "capacityUnit", "ssdValue", "ssdUnit", "hddValue", "hddUnit", "logicalProcessor"]);
 
 function kindLabel(kind) {
   return kind === "Display" ? "Display/Projector" : (kind || "Equipment");

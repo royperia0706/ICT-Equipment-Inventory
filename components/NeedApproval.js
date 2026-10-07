@@ -28,7 +28,7 @@ export default function NeedApproval({ items = [] }) {
       </button>
       {open ? (
         <div className="modal-back" onClick={() => setOpen(false)}>
-          <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="need-approval-title" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-card approval-card" role="dialog" aria-modal="true" aria-labelledby="need-approval-title" onClick={(event) => event.stopPropagation()}>
             <div className="modal-head">
               <h2 id="need-approval-title">Need Approval {approvals.length}</h2>
               <button type="button" className="ghost" onClick={() => setOpen(false)}>Close</button>

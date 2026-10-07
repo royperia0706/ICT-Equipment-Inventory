@@ -1,8 +1,9 @@
 "use client";
 
+import AddButton from "@/components/AddButton";
 import FocusableRow from "@/components/FocusableRow";
 import MassUpload from "@/components/MassUpload";
-import { PendingButtons, PendingNotes } from "@/components/PendingActions";
+import { CancelEditButton, PendingButtons, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
 import { acquireYears } from "@/lib/computer-fields";
 import { internetColumns, internetStatuses, wifiCapabilities } from "@/lib/internet-fields";
@@ -191,14 +192,24 @@ export default function InternetInventory({ initial = [], locations = [], user =
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       setError(data.error || "Could not update this request.");
-      return;
+      return false;
     }
-    setNotice(decision === "approve" ? "Approved." : "Rejected.");
     if (data.removed || (decision === "approve" && row.pendingAction === "delete")) {
       setRows((current) => current.filter((item) => item.id !== row.id));
-      return;
+      return true;
     }
     if (data.record) setRows((current) => current.map((item) => (item.id === data.record.id ? data.record : item)));
+    return true;
+  }
+
+  function applyCancel(data) {
+    if (data.error) {
+      setError(data.error);
+      return;
+    }
+    setError("");
+    if (data.record) setRows((current) => current.map((item) => (item.id === data.record.id ? data.record : item)));
+    setNotice(data.message || "Edit request cancelled.");
   }
 
   async function requestEdit() {
@@ -268,7 +279,7 @@ export default function InternetInventory({ initial = [], locations = [], user =
         {mode === "list" ? (
           <div className="head-actions">
             <MassUpload kind="internet" user={user} locations={locations} onLoaded={setRows} />
-            <button className="add-btn" type="button" onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }}>Add</button>
+            <AddButton onClick={() => { setEditingId(""); setBasicRequest(false); setForm(emptyForm); setMode("add"); }} />
           </div>
         ) : null}
       </header>
@@ -305,6 +316,7 @@ export default function InternetInventory({ initial = [], locations = [], user =
                             <button className="row-btn danger" type="button" onClick={() => removeRow(row)}>Delete</button>
                           )}
                           <PendingButtons user={user} row={row} onDecide={decide} />
+                          <CancelEditButton user={user} row={row} api="/api/internets" recordKey="internet" onDone={applyCancel} />
                         </div>
                         <PendingNotes row={row} />
                       </td>
@@ -321,9 +333,13 @@ export default function InternetInventory({ initial = [], locations = [], user =
             <div className="section-head">
               <h2>Basic information</h2>
               {editingId && user?.role !== "super-admin" && !editingRow?.editGranted ? (
-                <button className="ghost" type="button" disabled={editingRow?.editRequest === "pending" || busy} onClick={requestEdit}>
-                  {editingRow?.editRequest === "pending" ? "Edit requested" : "Request Edit"}
-                </button>
+                user?.role === "encoder" && editingRow?.editRequest === "pending" ? (
+                  <CancelEditButton user={user} row={editingRow} api="/api/internets" recordKey="internet" variant="ghost" onDone={applyCancel} />
+                ) : (
+                  <button className="ghost" type="button" disabled={editingRow?.editRequest === "pending" || busy} onClick={requestEdit}>
+                    {editingRow?.editRequest === "pending" ? "Edit requested" : "Request Edit"}
+                  </button>
+                )
               ) : null}
             </div>
             {editingId && user?.role !== "super-admin" ? (
