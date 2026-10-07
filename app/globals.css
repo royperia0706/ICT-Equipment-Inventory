@@ -1229,7 +1229,27 @@ fieldset.lock-fields:disabled {
 
 .account-filters {
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  margin-bottom: 10px;
+}
+
+.account-search {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: 10px;
   margin-bottom: 16px;
+}
+
+.account-search input {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 12px;
+  border-radius: 2px;
+}
+
+.account-search button {
+  margin: 0;
 }
 
 .report-head {
@@ -1259,6 +1279,7 @@ fieldset.lock-fields:disabled {
 
 @media (max-width: 640px) {
   .stat-grid, .pie-block, .form-grid, .dense-form .form-grid, .detail-grid, .dash-filters { grid-template-columns: 1fr; }
+  .account-search { grid-template-columns: 1fr; }
   .pie-block svg { justify-self: center; }
   .attention li { grid-template-columns: 1fr auto; }
   .attention li strong { grid-column: 1; }

@@ -156,6 +156,8 @@ export default function AccountsView({ accounts = [], user = null, locations = [
   const [issued, setIssued] = useState(null);
   const [shown, setShown] = useState(null);
   const [filters, setFilters] = useState({ unit: "", classification: "", station: "" });
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const manager = canManage(user);
   const region = regionsIn(locations)[0] || "PRO 4A - CALABARZON";
   const offices = useMemo(() => officesIn(locations, region), [locations, region]);
@@ -189,14 +191,29 @@ export default function AccountsView({ accounts = [], user = null, locations = [
       .sort((a, b) => a.localeCompare(b)),
     [rows, filters.unit, filters.classification],
   );
-  const filteredRows = useMemo(
-    () => rows.filter((account) => (
-      (!filters.unit || account.unit === filters.unit)
-      && (!filters.classification || account.classification === filters.classification)
-      && (!filters.station || (account.station || account.displayName) === filters.station)
-    )),
-    [rows, filters],
-  );
+  const filteredRows = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return rows.filter((account) => {
+      const matchesFilters = (
+        (!filters.unit || account.unit === filters.unit)
+        && (!filters.classification || account.classification === filters.classification)
+        && (!filters.station || (account.station || account.displayName) === filters.station)
+      );
+      if (!matchesFilters || !query) return matchesFilters;
+      const searchable = [
+        account.username,
+        account.displayName,
+        account.station,
+        account.classification,
+        account.unit,
+        officeLabel(account.unit),
+        account.province,
+        account.access,
+        statusText(account),
+      ].join(" ").toLowerCase();
+      return searchable.includes(query);
+    });
+  }, [rows, filters, searchTerm]);
 
   function updateFilter(event) {
     const { name, value } = event.target;
@@ -425,8 +442,34 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                 {filterStations.map((station) => <option key={station} value={station}>{station}</option>)}
               </select>
             </label>
-            <button className="ghost filter-btn" type="button" onClick={() => setFilters({ unit: "", classification: "", station: "" })}>Clear</button>
+            <button
+              className="ghost filter-btn"
+              type="button"
+              onClick={() => {
+                setFilters({ unit: "", classification: "", station: "" });
+                setSearchInput("");
+                setSearchTerm("");
+              }}
+            >
+              Clear
+            </button>
           </div>
+          <form
+            className="account-search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setSearchTerm(searchInput);
+            }}
+          >
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Search username, office, station, classification, or access"
+              aria-label="Search accounts"
+            />
+            <button type="submit">Search</button>
+          </form>
           {rows.length === 0 ? (
             <p className="hint">No accounts are loaded yet.</p>
           ) : filteredRows.length === 0 ? (
