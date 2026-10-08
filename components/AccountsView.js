@@ -558,7 +558,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                 <input name="username" value={form.username} onChange={update} required disabled={editing} autoComplete="off" />
               </Field>
               <Field label="Password" required={!editing}>
-                <input name="password" type="password" value={form.password} onChange={update} required={!editing} autoComplete="new-password" placeholder={editing ? "Leave blank to keep the current password" : ""} />
+                <input name="password" type="password" value={form.password} onChange={update} required={!editing} minLength={editing ? undefined : 8} pattern={form.password ? "(?=.*[A-Za-z])(?=.*\\d).{8,}" : undefined} title="Use at least 8 characters with letters and numbers." autoComplete="new-password" placeholder={editing ? "Leave blank to keep the current password" : "At least 8 characters, with letters and numbers"} />
               </Field>
               <Field label="Access" required>
                 <select name="access" value={form.access} onChange={update} required>

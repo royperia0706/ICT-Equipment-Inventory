@@ -553,6 +553,25 @@ button:disabled { opacity: 0.6; cursor: wait; }
   text-align: center;
   font-size: 18px;
 }
+.status-attention {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.status-attention li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+}
+.status-attention strong {
+  min-width: 32px;
+  text-align: center;
+  font-size: 18px;
+}
 .approval-card { background: #fff; }
 .approval-list {
   list-style: none;

@@ -151,7 +151,7 @@ export default function AppShell({ user, alerts = [], children }) {
               }}
             >
               <Icon name="bell" />
-              <span className="badge">{alerts.filter((item) => /approval|edit request/i.test(item.note || "")).length}</span>
+              <span className="badge">{alerts.reduce((sum, item) => sum + (item.summary ? Number(item.count) || 0 : /approval|edit request/i.test(item.note || "") ? 1 : 0), 0)}</span>
             </button>
             {alertsOpen ? (
               <div className="pop-panel" role="menu">
@@ -213,11 +213,11 @@ export default function AppShell({ user, alerts = [], children }) {
                     </label>
                     <label>
                       New password
-                      <input type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))} required />
+                      <input type="password" autoComplete="new-password" minLength={8} pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="Use at least 8 characters with letters and numbers." value={passwordForm.newPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))} required />
                     </label>
                     <label>
                       Confirm password
-                      <input type="password" autoComplete="new-password" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} required />
+                      <input type="password" autoComplete="new-password" minLength={8} pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="Use at least 8 characters with letters and numbers." value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} required />
                     </label>
                     {passwordError ? <p className="error">{passwordError}</p> : null}
                     <button type="submit" disabled={passwordBusy}>{passwordBusy ? "Saving…" : "Save password"}</button>

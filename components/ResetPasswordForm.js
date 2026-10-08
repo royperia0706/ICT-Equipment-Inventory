@@ -38,15 +38,15 @@ export default function ResetPasswordForm({ username }) {
       <IdleLogout />
       <section className="card">
         <h2>Set a new password</h2>
-        <p className="hint">This account was unblocked. Choose a new password for {username} before continuing.</p>
+        <p className="hint">This account was unblocked. Choose a new password for {username} before continuing. Use at least 8 characters with letters and numbers.</p>
         <form onSubmit={onSubmit}>
           <label>
             New password
-            <input name="newPassword" type="password" autoComplete="new-password" minLength={4} required />
+            <input name="newPassword" type="password" autoComplete="new-password" minLength={8} pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="Use at least 8 characters with letters and numbers." required />
           </label>
           <label>
             Confirm password
-            <input name="confirmPassword" type="password" autoComplete="new-password" minLength={4} required />
+            <input name="confirmPassword" type="password" autoComplete="new-password" minLength={8} pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="Use at least 8 characters with letters and numbers." required />
           </label>
           {error ? <p className="error" role="alert">{error}</p> : null}
           <button type="submit" disabled={busy}>{busy ? "Please wait…" : "Save password"}</button>

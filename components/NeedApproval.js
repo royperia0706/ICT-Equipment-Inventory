@@ -9,6 +9,7 @@ function isApproval(item) {
 
 export default function NeedApproval({ items = [] }) {
   const approvals = items.filter(isApproval);
+  const summaries = items.filter((item) => item.summary && Number(item.count) > 0);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -47,6 +48,16 @@ export default function NeedApproval({ items = [] }) {
             )}
           </div>
         </div>
+      ) : null}
+      {summaries.length ? (
+        <ul className="status-attention">
+          {summaries.map((item) => (
+            <li key={item.id}>
+              <span>{item.label}</span>
+              <strong>{item.count}</strong>
+            </li>
+          ))}
+        </ul>
       ) : null}
     </>
   );
