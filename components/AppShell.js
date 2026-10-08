@@ -26,6 +26,7 @@ export default function AppShell({ user, alerts = [], children }) {
   const alertsRef = useRef(null);
   const accountRef = useRef(null);
   const menu = navigation.filter((item) => item.href !== "/accounts" || user?.role !== "encoder");
+  const attentionCount = alerts.reduce((sum, item) => sum + (item.summary ? Number(item.count) || 0 : /approval|edit request/i.test(item.note || "") ? 1 : 0), 0);
   const [groups, setGroups] = useState({
     Inventory: true,
   });
@@ -151,7 +152,7 @@ export default function AppShell({ user, alerts = [], children }) {
               }}
             >
               <Icon name="bell" />
-              <span className="badge">{alerts.reduce((sum, item) => sum + (item.summary ? Number(item.count) || 0 : /approval|edit request/i.test(item.note || "") ? 1 : 0), 0)}</span>
+              {attentionCount >= 1 ? <span className="badge">{attentionCount}</span> : null}
             </button>
             {alertsOpen ? (
               <div className="pop-panel" role="menu">

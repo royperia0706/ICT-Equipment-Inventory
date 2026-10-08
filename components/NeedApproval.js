@@ -21,12 +21,16 @@ export default function NeedApproval({ items = [] }) {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [open]);
 
+  if (!approvals.length && !summaries.length) return null;
+
   return (
     <>
-      <button className="need-approval" type="button" onClick={() => setOpen(true)}>
-        <span>Need Approval</span>
-        <strong>{approvals.length}</strong>
-      </button>
+      {approvals.length ? (
+        <button className="need-approval" type="button" onClick={() => setOpen(true)}>
+          <span>Need Approval</span>
+          <strong>{approvals.length}</strong>
+        </button>
+      ) : null}
       {open ? (
         <div className="modal-back" onClick={() => setOpen(false)}>
           <div className="modal-card approval-card" role="dialog" aria-modal="true" aria-labelledby="need-approval-title" onClick={(event) => event.stopPropagation()}>
