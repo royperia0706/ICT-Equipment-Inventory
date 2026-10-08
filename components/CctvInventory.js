@@ -24,6 +24,7 @@ const listColumns = [
 ];
 
 const emptyForm = {
+  installationLocation: "",
   cctvType: "",
   cctvBrand: "",
   numberOfCameras: "",
@@ -59,6 +60,7 @@ function formFromRow(row) {
   const status = statuses.includes(row.status) ? row.status : statuses.includes(row.pendingStatus) ? row.pendingStatus : "";
   return {
     ...emptyForm,
+    installationLocation: row.installationLocation || "",
     cctvType: row.cctvType || "",
     cctvBrand: row.cctvBrand || "",
     numberOfCameras: row.numberOfCameras || "",
@@ -414,6 +416,9 @@ export default function CctvInventory({ initial = [], locations = [], user = nul
                   disabled={stationOptions.length <= 1}
                   options={stationOptions.map((row) => ({ value: row.name, label: `${row.name} (${row.classification})` }))}
                 />
+              </Field>
+              <Field label="Installation Location" required>
+                <input name="installationLocation" value={form.installationLocation} onChange={update} required />
               </Field>
               <Field label="CCTV Type" required>
                 <input name="cctvType" value={form.cctvType} onChange={update} required />

@@ -112,6 +112,7 @@ const detailFields = {
     ["entryDate", "Entry Date"],
     ["province", "Office"],
     ["municipality", "Station"],
+    ["installationLocation", "Installation Location"],
     ["cctvType", "CCTV Type"],
     ["cctvBrand", "CCTV Brand"],
     ["numberOfCameras", "Number of Cameras"],
