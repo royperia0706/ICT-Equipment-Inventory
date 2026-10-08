@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
 import { formatClock } from "@/lib/lockout";
 
-export default function AuthScreen() {
+export default function AuthScreen({ notice = "" }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [wait, setWait] = useState(0);
@@ -48,6 +48,7 @@ export default function AuthScreen() {
       <section className="card">
         <h2>Sign in</h2>
         <p className="hint">Use the username and password assigned to your office or station.</p>
+        {notice ? <p className="hint" role="status">{notice}</p> : null}
         <form onSubmit={onSubmit}>
           <label>
             Username

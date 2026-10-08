@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/Icon";
+import IdleLogout from "@/components/IdleLogout";
 import NeedApproval from "@/components/NeedApproval";
 import SignOutButton from "@/components/SignOutButton";
 import { navigation } from "@/lib/navigation";
@@ -57,6 +58,7 @@ export default function AppShell({ user, alerts = [], children }) {
 
   return (
     <div className={navOpen ? "shell nav-open" : "shell"}>
+      <IdleLogout />
       <aside className="side">
         <div className="side-brand">
           <img className="brand-logo" src="/logo.jpg" alt="" />

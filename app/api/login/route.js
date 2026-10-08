@@ -60,6 +60,7 @@ export async function POST(request) {
     step,
     revision: result.revision || 0,
     sessionId,
+    activeAt: Date.now(),
   });
   const { recordActivity } = await import("@/lib/activity");
   await recordActivity({

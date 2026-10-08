@@ -19,6 +19,7 @@ export async function POST(request) {
       step: "verified",
       revision,
       sessionId: session.sessionId,
+      activeAt: Date.now(),
     });
     return json({ ok: true });
   } catch (error) {

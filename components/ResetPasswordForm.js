@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import IdleLogout from "@/components/IdleLogout";
 import Shell from "@/components/Shell";
 
 export default function ResetPasswordForm({ username }) {
@@ -34,6 +35,7 @@ export default function ResetPasswordForm({ username }) {
 
   return (
     <Shell>
+      <IdleLogout />
       <section className="card">
         <h2>Set a new password</h2>
         <p className="hint">This account was unblocked. Choose a new password for {username} before continuing.</p>

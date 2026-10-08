@@ -1,8 +1,14 @@
-import { getSession, json, setSession } from "@/lib/session";
-import { accountState, finishPasswordReset, getSessionUser } from "@/lib/users";
+import { idleExpired } from "@/lib/idle";
+import { clearSession, getSession, json, setSession } from "@/lib/session";
+import { accountState, endUserSession, finishPasswordReset, getSessionUser } from "@/lib/users";
 
 export async function POST(request) {
   const session = await getSession();
+  if (idleExpired(session)) {
+    await endUserSession(session.username, session.sessionId).catch(() => {});
+    await clearSession();
+    return json({ ok: false, error: "You were signed out after 15 minutes of inactivity." }, 401);
+  }
   if (session.step !== "reset-password" || !session.username || !session.sessionId) {
     return json({ ok: false, error: "Sign in with the temporary password first." }, 401);
   }
@@ -21,6 +27,7 @@ export async function POST(request) {
       step: "verified",
       revision,
       sessionId: session.sessionId,
+      activeAt: Date.now(),
     });
     return json({ ok: true });
   } catch (error) {
