@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import CellphoneInventory from "@/components/CellphoneInventory";
 import ComputerInventory from "@/components/ComputerInventory";
+import CctvInventory from "@/components/CctvInventory";
 import DisplayInventory from "@/components/DisplayInventory";
+import DroneInventory from "@/components/DroneInventory";
 import InternetInventory from "@/components/InternetInventory";
 import ModuleView from "@/components/ModuleView";
 import PrinterInventory from "@/components/PrinterInventory";
@@ -13,7 +15,9 @@ import { requireUser } from "@/lib/guard";
 import { listLocations } from "@/lib/locations";
 import { moduleFor } from "@/lib/navigation";
 import { listCellphones } from "@/lib/cellphones";
+import { listCctvs } from "@/lib/cctvs";
 import { listDisplays } from "@/lib/displays";
+import { listDrones } from "@/lib/drones";
 import { listInternets } from "@/lib/internets";
 import { listPrinters } from "@/lib/printers";
 import { listRadios } from "@/lib/radios";
@@ -21,7 +25,7 @@ import { listStorages } from "@/lib/storages";
 
 export default async function ItemPage({ params }) {
   const { section, item } = await params;
-  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector" || item === "cellphone" || item === "handheld-radio" || item === "storage")) {
+  if (section === "inventory" && (item === "computer" || item === "printer" || item === "internet" || item === "display-projector" || item === "cellphone" || item === "handheld-radio" || item === "cctv" || item === "drone" || item === "storage")) {
     const user = await requireUser();
     let locations = [];
     try {
@@ -82,6 +86,24 @@ export default async function ItemPage({ params }) {
         radios = [];
       }
       return <RadioInventory initial={radios} locations={locations} user={user} />;
+    }
+    if (item === "cctv") {
+      let cctvs = [];
+      try {
+        cctvs = await listCctvs(user);
+      } catch {
+        cctvs = [];
+      }
+      return <CctvInventory initial={cctvs} locations={locations} user={user} />;
+    }
+    if (item === "drone") {
+      let drones = [];
+      try {
+        drones = await listDrones(user);
+      } catch {
+        drones = [];
+      }
+      return <DroneInventory initial={drones} locations={locations} user={user} />;
     }
     let storages = [];
     try {

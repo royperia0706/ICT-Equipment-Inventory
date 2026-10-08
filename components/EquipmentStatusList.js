@@ -12,6 +12,8 @@ const kindApi = {
   Internet: { path: "/api/internets", key: "internet" },
   Display: { path: "/api/displays", key: "display" },
   Cellphone: { path: "/api/cellphones", key: "cellphone" },
+  CCTV: { path: "/api/cctvs", key: "cctv" },
+  Drone: { path: "/api/drones", key: "drone" },
   "Handheld Radio": { path: "/api/radios", key: "radio" },
   Storage: { path: "/api/storages", key: "storage" },
 };
@@ -24,6 +26,8 @@ const inventoryKind = {
   "/inventory/switch": "Switch",
   "/inventory/display-projector": "Display",
   "/inventory/cellphone": "Cellphone",
+  "/inventory/cctv": "CCTV",
+  "/inventory/drone": "Drone",
   "/inventory/handheld-radio": "Handheld Radio",
   "/inventory/storage": "Storage",
 };

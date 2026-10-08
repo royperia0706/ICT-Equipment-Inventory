@@ -6,7 +6,9 @@ import NeedApproval from "@/components/NeedApproval";
 import OfficeStationFilters from "@/components/OfficeStationFilters";
 import { cellphoneColumns } from "@/lib/cellphone-fields";
 import { computerColumns } from "@/lib/computer-fields";
+import { cctvColumns } from "@/lib/cctv-fields";
 import { displayColumns } from "@/lib/display-fields";
+import { droneColumns } from "@/lib/drone-fields";
 import { internetColumns } from "@/lib/internet-fields";
 import { officeLabel } from "@/lib/location-choices";
 import { printerColumns } from "@/lib/printer-fields";
@@ -20,6 +22,8 @@ const columnsByKind = {
   Internet: internetColumns,
   Display: displayColumns,
   Cellphone: cellphoneColumns,
+  CCTV: cctvColumns,
+  Drone: droneColumns,
   "Handheld Radio": radioColumns,
   Storage: storageColumns,
 };
@@ -62,6 +66,8 @@ const inventoryKind = {
   "/inventory/switch": "Switch",
   "/inventory/display-projector": "Display",
   "/inventory/cellphone": "Cellphone",
+  "/inventory/cctv": "CCTV",
+  "/inventory/drone": "Drone",
   "/inventory/handheld-radio": "Handheld Radio",
   "/inventory/storage": "Storage",
 };

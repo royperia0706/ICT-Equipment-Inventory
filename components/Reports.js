@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { agingLabel, columnsWithAging } from "@/lib/aging";
 import { cellphoneColumns } from "@/lib/cellphone-fields";
 import { computerColumns, statuses } from "@/lib/computer-fields";
+import { cctvColumns } from "@/lib/cctv-fields";
 import { displayColumns } from "@/lib/display-fields";
+import { droneColumns } from "@/lib/drone-fields";
 import { internetColumns } from "@/lib/internet-fields";
 import { officeLabel, officesIn, regionName, regionsIn, stationsIn } from "@/lib/location-choices";
 import { navigation } from "@/lib/navigation";
@@ -22,6 +24,8 @@ const sheets = [
   { href: "/inventory/internet", name: "Internet", kind: "Internet", columns: internetColumns },
   { href: "/inventory/display-projector", name: "Display Projector", kind: "Display", columns: columnsWithAging(displayColumns) },
   { href: "/inventory/cellphone", name: "Cellphone", kind: "Cellphone", columns: columnsWithAging(cellphoneColumns) },
+  { href: "/inventory/cctv", name: "CCTV", kind: "CCTV", columns: columnsWithAging(cctvColumns) },
+  { href: "/inventory/drone", name: "Drone", kind: "Drone", columns: columnsWithAging(droneColumns) },
   { href: "/inventory/handheld-radio", name: "Handheld Radio", kind: "Handheld Radio", columns: columnsWithAging(radioColumns) },
   { href: "/inventory/storage", name: "Storage", kind: "Storage", columns: columnsWithAging(storageColumns) },
 ];
@@ -47,7 +51,7 @@ function matches(record, filters) {
 }
 
 function endUser(row) {
-  return row.specificEndUser || row.accountablePerson || row.issuedTo || "";
+  return row.specificEndUser || row.accountablePerson || row.issuedTo || row.endUser || "";
 }
 
 function previewValues(row) {
