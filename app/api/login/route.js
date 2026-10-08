@@ -1,6 +1,6 @@
 import { clearLock, inspectLock, registerFailure } from "@/lib/lockout";
 import { json, setSession } from "@/lib/session";
-import { normalizeUsername, signIn } from "@/lib/users";
+import { normalizeUsername, signIn, startUserSession } from "@/lib/users";
 
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
@@ -54,7 +54,13 @@ export async function POST(request) {
 
   clearLock(username);
   const step = result.mustChangePassword ? "reset-password" : "verified";
-  await setSession({ username: result.user.username, step, revision: result.revision || 0 });
+  const sessionId = await startUserSession(result.user.username);
+  await setSession({
+    username: result.user.username,
+    step,
+    revision: result.revision || 0,
+    sessionId,
+  });
   const { recordActivity } = await import("@/lib/activity");
   await recordActivity({
     username: result.user.username,
