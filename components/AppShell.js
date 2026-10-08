@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Icon from "@/components/Icon";
 import NeedApproval from "@/components/NeedApproval";
@@ -22,6 +22,8 @@ export default function AppShell({ user, alerts = [], children }) {
   const [passwordNotice, setPasswordNotice] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const alertsRef = useRef(null);
+  const accountRef = useRef(null);
   const menu = navigation.filter((item) => item.href !== "/accounts" || user?.role !== "encoder");
   const [groups, setGroups] = useState({
     Inventory: true,
@@ -34,6 +36,10 @@ export default function AppShell({ user, alerts = [], children }) {
   }, [pathname]);
 
   useEffect(() => {
+    function closeDropdowns(event) {
+      if (!alertsRef.current?.contains(event.target)) setAlertsOpen(false);
+      if (!accountRef.current?.contains(event.target)) setAccountOpen(false);
+    }
     function onKey(event) {
       if (event.key === "Escape") {
         setAccountOpen(false);
@@ -41,8 +47,12 @@ export default function AppShell({ user, alerts = [], children }) {
         setNavOpen(false);
       }
     }
+    window.addEventListener("mousedown", closeDropdowns);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", closeDropdowns);
+      window.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   return (
@@ -127,7 +137,7 @@ export default function AppShell({ user, alerts = [], children }) {
         </button>
         <p className="app-title">PRO 4A - ICT Inventory Management System</p>
         <div className="app-tools">
-          <div className="pop">
+          <div ref={alertsRef} className="pop">
             <button
               className="icon-btn"
               type="button"
@@ -148,7 +158,7 @@ export default function AppShell({ user, alerts = [], children }) {
               </div>
             ) : null}
           </div>
-          <div className="pop">
+          <div ref={accountRef} className="pop">
             <button
               className="account-btn"
               type="button"
