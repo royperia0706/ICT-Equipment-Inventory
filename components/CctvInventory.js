@@ -32,6 +32,7 @@ const emptyForm = {
   monitorSize: "",
   resolution: "",
   nightVision: "",
+  readyForMirrorViewing: "",
   connectionType: "",
   networkProvider: "",
   dateAcquired: "",
@@ -68,6 +69,7 @@ function formFromRow(row) {
     monitorSize: row.monitorSize || "",
     resolution: row.resolution || "",
     nightVision: cctvNightVisionOptions.includes(row.nightVision) ? row.nightVision : "",
+    readyForMirrorViewing: cctvNightVisionOptions.includes(row.readyForMirrorViewing) ? row.readyForMirrorViewing : "",
     connectionType: cctvConnectionTypes.includes(row.connectionType) ? row.connectionType : "",
     networkProvider: row.connectionType === "Mobile Data" ? row.networkProvider || "" : "",
     dateAcquired: String(row.dateAcquired || "").slice(0, 4),
@@ -404,7 +406,7 @@ export default function CctvInventory({ initial = [], locations = [], user = nul
                 <input value={controlNumber} disabled />
               </Field>
               <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
+                <Select name="province" value={form.province} onChange={update} disabled={user?.role !== "super-admin"} blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
               <Field label="Station" required>
                 <Select
@@ -440,6 +442,9 @@ export default function CctvInventory({ initial = [], locations = [], user = nul
               </Field>
               <Field label="Night Vision" required>
                 <Select name="nightVision" value={form.nightVision} onChange={update} options={cctvNightVisionOptions} required />
+              </Field>
+              <Field label="Ready for Mirror Viewing" required>
+                <Select name="readyForMirrorViewing" value={form.readyForMirrorViewing} onChange={update} options={cctvNightVisionOptions} required />
               </Field>
               <Field label="Connection Type" required>
                 <Select name="connectionType" value={form.connectionType} onChange={update} options={cctvConnectionTypes} required />

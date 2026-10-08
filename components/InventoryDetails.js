@@ -120,6 +120,7 @@ const detailFields = {
     ["monitorSize", "Monitor Size"],
     ["resolution", "CCTV Resolution"],
     ["nightVision", "Night Vision"],
+    ["readyForMirrorViewing", "Ready for Mirror Viewing"],
     ["connectionType", "Connection Type"],
     ["networkProvider", "Network Provider"],
     ["dateAcquired", "Date Acquired"],

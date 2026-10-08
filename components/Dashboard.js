@@ -62,8 +62,6 @@ const inventoryKind = {
   "/inventory/computer": "Computer",
   "/inventory/printer": "Printer",
   "/inventory/internet": "Internet",
-  "/inventory/router": "Router",
-  "/inventory/switch": "Switch",
   "/inventory/display-projector": "Display",
   "/inventory/cellphone": "Cellphone",
   "/inventory/cctv": "CCTV",

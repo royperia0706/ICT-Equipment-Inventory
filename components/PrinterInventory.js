@@ -403,7 +403,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                 <input value={regionsIn(locations)[0] || "PRO 4A - CALABARZON"} disabled />
               </Field>
               <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
+                <Select name="province" value={form.province} onChange={update} disabled={user?.role !== "super-admin"} blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
               <Field label="Station" required>
                 <Select

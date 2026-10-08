@@ -404,7 +404,7 @@ export default function StorageInventory({ initial = [], locations = [], user = 
                 <input value={regionName} disabled />
               </Field>
               <Field label="Office" required>
-                <Select name="province" value={form.province} onChange={update} disabled blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
+                <Select name="province" value={form.province} onChange={update} disabled={user?.role !== "super-admin"} blank={false} options={provinceOptions.length ? provinceOptions : [form.province]} />
               </Field>
               <Field label="Station" required>
                 <Select
