@@ -1,0 +1,200 @@
+"use client";
+
+import { agingLabel } from "@/lib/aging";
+
+const detailFields = {
+  printer: [
+    ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
+    ["region", "Region"],
+    ["province", "Office"],
+    ["municipality", "Station"],
+    ["printerType", "Printer Type"],
+    ["brand", "Brand"],
+    ["model", "Model"],
+    ["yearModel", "Year Model"],
+    ["serialNumber", "Serial Number"],
+    ["connectionType", "Connection Type"],
+    ["tonerInkType", "Toner / Ink Type"],
+    ["colorCapability", "Color Capability"],
+    ["section", "Section"],
+    ["accountablePerson", "End User"],
+    ["status", "Printer Status"],
+    ["condition", "Condition"],
+    ["targetFixDate", "Target Date to be Fixed"],
+    ["problemDetail", "Problem or Defect"],
+    ["dateAssessed", "Date Assessed"],
+    ["reasonForBer", "Reason for BER"],
+    ["yearMissing", "Year Discovered Missing"],
+    ["modeOfAcquisition", "Mode of Acquisition"],
+    ["dateAcquired", "Year Acquired"],
+    ["acquisitionCost", "Acquisition Cost"],
+    ["remarks", "Remarks"],
+    ["aging", "Aging"],
+  ],
+  internet: [
+    ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
+    ["region", "Region"],
+    ["province", "Office"],
+    ["municipality", "Station"],
+    ["internetType", "Internet Type"],
+    ["provider", "Provider"],
+    ["connectionType", "Connection Type"],
+    ["speed", "Speed"],
+    ["wifiCapability", "Wifi Capability"],
+    ["location", "Location (Office)"],
+    ["yearSubscribed", "Year Subscribed"],
+    ["monthlySubscription", "Monthly Subscription"],
+    ["ipAddress", "IP Address"],
+    ["status", "Status"],
+    ["aging", "Aging"],
+  ],
+  display: [
+    ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
+    ["region", "Region"],
+    ["province", "Office"],
+    ["municipality", "Station"],
+    ["equipmentType", "Equipment Type"],
+    ["brand", "Brand"],
+    ["model", "Model"],
+    ["serialNumber", "Serial Number"],
+    ["screenSize", "Screen Size"],
+    ["resolution", "Resolution"],
+    ["displayTechnology", "Display Technology"],
+    ["inputPorts", "Input Ports"],
+    ["dateAcquired", "Year Acquired"],
+    ["acquisitionCost", "Acquisition Cost"],
+    ["location", "Location"],
+    ["issuedTo", "Accountable Person"],
+    ["status", "Status"],
+    ["condition", "Condition"],
+    ["targetFixDate", "Target Date to be Fixed"],
+    ["problemDetail", "Problem or Defect"],
+    ["dateAssessed", "Date Assessed"],
+    ["reasonForBer", "Reason for BER"],
+    ["yearMissing", "Year Discovered Missing"],
+    ["remarks", "Remarks"],
+    ["aging", "Aging"],
+  ],
+  cellphone: [
+    ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
+    ["region", "Region"],
+    ["province", "Office"],
+    ["municipality", "Station"],
+    ["cellphoneType", "Cellphone Type"],
+    ["brand", "Brand"],
+    ["operatingSystem", "Operating System"],
+    ["serialNumber", "Serial Number"],
+    ["simNumber", "SIM Number"],
+    ["mobileNetwork", "Mobile Network"],
+    ["storageCapacity", "Storage Capacity (GB)"],
+    ["ram", "RAM (GB)"],
+    ["yearModel", "Year Model"],
+    ["dateAcquired", "Year Acquired"],
+    ["acquisitionCost", "Acquisition Cost"],
+    ["modeOfAcquisition", "Mode of Acquisition"],
+    ["issuedTo", "End User"],
+    ["status", "Status"],
+    ["condition", "Condition"],
+    ["targetFixDate", "Target Date to be Fixed"],
+    ["problemDetail", "Problem or Defect"],
+    ["dateAssessed", "Date Assessed"],
+    ["reasonForBer", "Reason for BER"],
+    ["yearMissing", "Year Discovered Missing"],
+    ["remarks", "Remarks"],
+    ["aging", "Aging"],
+  ],
+  radio: [
+    ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
+    ["region", "Region"],
+    ["province", "Office"],
+    ["municipality", "Station"],
+    ["radioType", "Radio Type"],
+    ["brand", "Brand"],
+    ["model", "Model"],
+    ["serialNumber", "Serial Number"],
+    ["frequencyBand", "Frequency Band/Network"],
+    ["dateAcquired", "Year Acquired"],
+    ["acquisitionCost", "Acquisition Cost"],
+    ["modeOfAcquisition", "Mode of Acquisition"],
+    ["issuedTo", "End User"],
+    ["status", "Status"],
+    ["condition", "Condition"],
+    ["targetFixDate", "Target Date to be Fixed"],
+    ["problemDetail", "Problem or Defect"],
+    ["dateAssessed", "Date Assessed"],
+    ["reasonForBer", "Reason for BER"],
+    ["yearMissing", "Year Discovered Missing"],
+    ["remarks", "Remarks"],
+    ["aging", "Aging"],
+  ],
+  storage: [
+    ["controlNumber", "Control Number"],
+    ["entryDate", "Entry Date"],
+    ["region", "Region"],
+    ["province", "Office"],
+    ["municipality", "Station"],
+    ["storageType", "Storage Type"],
+    ["brand", "Brand"],
+    ["model", "Model"],
+    ["serialNumber", "Serial Number"],
+    ["capacity", "Capacity (GB/TB)"],
+    ["storageTechnology", "Storage Technology"],
+    ["dateAcquired", "Year Acquired"],
+    ["acquisitionCost", "Acquisition Cost"],
+    ["modeOfAcquisition", "Mode of Acquisition"],
+    ["issuedTo", "Issued To"],
+    ["status", "Status"],
+    ["condition", "Condition"],
+    ["targetFixDate", "Target Date to be Fixed"],
+    ["problemDetail", "Problem or Defect"],
+    ["dateAssessed", "Date Assessed"],
+    ["reasonForBer", "Reason for BER"],
+    ["yearMissing", "Year Discovered Missing"],
+    ["remarks", "Remarks"],
+    ["aging", "Aging"],
+  ],
+};
+
+const titles = {
+  printer: "Printer details",
+  internet: "Internet details",
+  display: "Display/Projector details",
+  cellphone: "Cellphone details",
+  radio: "Handheld Radio details",
+  storage: "Storage details",
+};
+
+function valueFor(row, kind, key) {
+  if (key === "aging") {
+    const acquired = kind === "internet" ? row.yearSubscribed : row.dateAcquired || row.yearModel;
+    return agingLabel(acquired);
+  }
+  if (key === "status" && row.status === "Pending" && row.pendingStatus) {
+    return `Pending · ${row.pendingStatus}`;
+  }
+  return row[key] || "—";
+}
+
+export default function InventoryDetails({ kind, row, onBack }) {
+  return (
+    <section className="panel-card">
+      <h2>{row.controlNumber || titles[kind]}</h2>
+      <dl className="detail-grid">
+        {(detailFields[kind] || []).map(([key, label]) => (
+          <div key={key}>
+            <dt>{label}</dt>
+            <dd>{valueFor(row, kind, key)}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="computer-actions">
+        <button className="ghost" type="button" onClick={onBack}>Back</button>
+      </div>
+    </section>
+  );
+}

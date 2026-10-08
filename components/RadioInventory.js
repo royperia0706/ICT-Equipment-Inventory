@@ -2,6 +2,7 @@
 
 import FocusableRow from "@/components/FocusableRow";
 import InventoryActionMenu from "@/components/InventoryActionMenu";
+import InventoryDetails from "@/components/InventoryDetails";
 import MassUpload from "@/components/MassUpload";
 import { CancelEditButton, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
@@ -103,6 +104,7 @@ function Select({ name, value, onChange, options, disabled, required, blank = tr
 export default function RadioInventory({ initial = [], locations = [], user = null }) {
   const [rows, setRows] = useState(initial);
   const [mode, setMode] = useState("list");
+  const [viewing, setViewing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [controlNumber, setControlNumber] = useState("");
@@ -208,6 +210,7 @@ export default function RadioInventory({ initial = [], locations = [], user = nu
       return;
     }
     setRows((current) => current.filter((item) => item.id !== row.id));
+    return true;
   }
 
   async function decide(row, decision, target) {
@@ -293,7 +296,7 @@ export default function RadioInventory({ initial = [], locations = [], user = nu
     }
   }
 
-  const title = mode === "edit" ? "Edit handheld radio" : mode === "add" ? "Add handheld radio" : "Handheld Radio";
+  const title = mode === "edit" ? "Edit handheld radio" : mode === "add" ? "Add handheld radio" : mode === "view" ? "Handheld Radio details" : "Handheld Radio";
   const editingRow = rows.find((row) => row.id === editingId) || null;
   const fieldsLocked = Boolean(editingId) && user?.role !== "super-admin" && !editingRow?.editGranted;
   const regionName = form.region || regionsIn(locations)[0] || "PRO 4A - CALABARZON";
@@ -313,7 +316,9 @@ export default function RadioInventory({ initial = [], locations = [], user = nu
         ) : null}
       </header>
 
-      {mode === "list" ? (
+      {mode === "view" && viewing ? (
+        <InventoryDetails kind="radio" row={viewing} onBack={() => { setViewing(null); setMode("list"); }} />
+      ) : mode === "list" ? (
         <section className="panel-card">
           {error ? <p className="error" role="alert">{error}</p> : null}
           {notice ? <p className="hint">{notice}</p> : null}
@@ -347,6 +352,7 @@ export default function RadioInventory({ initial = [], locations = [], user = nu
                           busy={busy}
                           onEdit={editRow}
                           onDelete={removeRow}
+                          onView={(item) => { setViewing(item); setMode("view"); }}
                           onDecide={decide}
                           cancelApi="/api/radios"
                           recordKey="radio"

@@ -313,6 +313,7 @@ export default function ComputerInventory({ initial = [], locations = [], user =
       return;
     }
     setRows((current) => current.filter((item) => item.id !== row.id));
+    return true;
   }
 
   async function decide(row, decision, target) {

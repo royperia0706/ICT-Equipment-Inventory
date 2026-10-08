@@ -2,6 +2,7 @@
 
 import FocusableRow from "@/components/FocusableRow";
 import InventoryActionMenu from "@/components/InventoryActionMenu";
+import InventoryDetails from "@/components/InventoryDetails";
 import MassUpload from "@/components/MassUpload";
 import { CancelEditButton, PendingNotes } from "@/components/PendingActions";
 import { useEffect, useMemo, useState } from "react";
@@ -114,6 +115,7 @@ function Select({ name, value, onChange, options, disabled, required, blank = tr
 export default function PrinterInventory({ initial = [], locations = [], user = null }) {
   const [rows, setRows] = useState(initial);
   const [mode, setMode] = useState("list");
+  const [viewing, setViewing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
   const [controlNumber, setControlNumber] = useState("");
@@ -219,6 +221,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
       return;
     }
     setRows((current) => current.filter((item) => item.id !== row.id));
+    return true;
   }
 
   async function decide(row, decision, target) {
@@ -304,7 +307,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
     }
   }
 
-  const title = mode === "edit" ? "Edit printer" : mode === "add" ? "Add printer" : "Printer";
+  const title = mode === "edit" ? "Edit printer" : mode === "add" ? "Add printer" : mode === "view" ? "Printer details" : "Printer";
   const editingRow = rows.find((row) => row.id === editingId) || null;
   const fieldsLocked = Boolean(editingId) && user?.role !== "super-admin" && !editingRow?.editGranted;
 
@@ -323,7 +326,9 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
         ) : null}
       </header>
 
-      {mode === "list" ? (
+      {mode === "view" && viewing ? (
+        <InventoryDetails kind="printer" row={viewing} onBack={() => { setViewing(null); setMode("list"); }} />
+      ) : mode === "list" ? (
         <section className="panel-card">
           {error ? <p className="error" role="alert">{error}</p> : null}
           {notice ? <p className="hint">{notice}</p> : null}
@@ -357,6 +362,7 @@ export default function PrinterInventory({ initial = [], locations = [], user = 
                           busy={busy}
                           onEdit={editRow}
                           onDelete={removeRow}
+                          onView={(item) => { setViewing(item); setMode("view"); }}
                           onDecide={decide}
                           cancelApi="/api/printers"
                           recordKey="printer"

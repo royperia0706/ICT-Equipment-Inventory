@@ -95,7 +95,23 @@ export default function InventoryActionMenu({
     setWorking(true);
     try {
       const ok = await onDecide(row, decision, target);
-      if (ok) setPrompt(decisionText(row, decision, target));
+      if (ok) {
+        const deleted = decision === "approve" && row.pendingAction === "delete";
+        setPrompt(deleted
+          ? `${row.controlNumber || "Item"} was successfully deleted.`
+          : decisionText(row, decision, target));
+      }
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function deleteItem() {
+    setOpen(false);
+    setWorking(true);
+    try {
+      const deleted = await onDelete(row);
+      if (deleted) setPrompt(`${row.controlNumber || "Item"} was successfully deleted.`);
     } finally {
       setWorking(false);
     }
@@ -142,9 +158,9 @@ export default function InventoryActionMenu({
         >
           <button type="button" onClick={() => { setOpen(false); onEdit(row); }}><MenuIcon name="edit" />Edit</button>
           {user?.role === "encoder" ? null : (
-            <button type="button" onClick={() => { setOpen(false); onDelete(row); }}><MenuIcon name="delete" />Delete</button>
+            <button type="button" onClick={deleteItem}><MenuIcon name="delete" />Delete</button>
           )}
-          {onView ? <button type="button" onClick={() => { setOpen(false); onView(row); }}><MenuIcon name="view" />View data</button> : null}
+          {onView ? <button type="button" onClick={() => { setOpen(false); onView(row); }}><MenuIcon name="view" />View</button> : null}
           {canCancel ? <button type="button" onClick={cancelEdit}><MenuIcon name="cancel" />Cancel Edit Request</button> : null}
           {editRequest ? (
             <>
