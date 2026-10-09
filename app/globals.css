@@ -1284,24 +1284,34 @@ fieldset.lock-fields:disabled {
   margin-bottom: 10px;
 }
 
+.account-head-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .account-search {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto;
-  gap: 10px;
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
 }
 
 .account-search input {
-  width: 100%;
+  width: 220px;
+  height: 42px;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
-  padding: 12px;
+  padding: 0 10px;
   border-radius: 2px;
 }
 
 .account-search button {
   margin: 0;
+  height: 42px;
+  padding: 0 14px;
 }
 
 .report-head {
@@ -1358,7 +1368,17 @@ fieldset.lock-fields:disabled {
     flex: 1 1 auto;
   }
   .stat-grid, .pie-block, .form-grid, .dense-form .form-grid, .detail-grid, .dash-filters, .report-filters, .account-filters { grid-template-columns: 1fr; }
-  .account-search { grid-template-columns: 1fr; }
+  .account-head-tools {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .account-search { width: 100%; }
+  .account-search input {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
   .pie-block svg { justify-self: center; }
   .attention li { grid-template-columns: 1fr auto; }
   .attention li strong { grid-column: 1; }

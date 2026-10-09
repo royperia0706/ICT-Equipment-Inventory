@@ -406,8 +406,26 @@ export default function AccountsView({ accounts = [], user = null, locations = [
           <p className="kicker">Accounts</p>
           <h1>{title}</h1>
         </div>
-        {mode === "list" && manager ? (
-          <button className="add-btn" type="button" onClick={openAdd}>Add</button>
+        {mode === "list" ? (
+          <div className="account-head-tools">
+            <form
+              className="account-search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setSearchTerm(searchInput);
+              }}
+            >
+              <input
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Search accounts"
+                aria-label="Search accounts"
+              />
+              <button type="submit">Search</button>
+            </form>
+            {manager ? <button className="add-btn" type="button" onClick={openAdd}>Add</button> : null}
+          </div>
         ) : null}
       </header>
 
@@ -454,22 +472,6 @@ export default function AccountsView({ accounts = [], user = null, locations = [
               Clear
             </button>
           </div>
-          <form
-            className="account-search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setSearchTerm(searchInput);
-            }}
-          >
-            <input
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search username, office, station, classification, or access"
-              aria-label="Search accounts"
-            />
-            <button type="submit">Search</button>
-          </form>
           {rows.length === 0 ? (
             <p className="hint">No accounts are loaded yet.</p>
           ) : filteredRows.length === 0 ? (
