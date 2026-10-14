@@ -1,6 +1,6 @@
 import { currentUser } from "@/lib/guard";
 import { json } from "@/lib/session";
-import { addAccount, deactivateAccount, decideAccount, editAccount, removeAccount, resetAccountPassword, showAccountPassword, unblockAccount } from "@/lib/users";
+import { addAccount, deactivateAccount, decideAccount, editAccount, forceLogoutAccount, removeAccount, resetAccountPassword, showAccountPassword, unblockAccount } from "@/lib/users";
 
 async function actor() {
   return currentUser();
@@ -25,6 +25,10 @@ export async function POST(request) {
     }
     if (body.action === "deactivate") {
       const result = await deactivateAccount(user, body.username);
+      return json({ ok: true, ...result });
+    }
+    if (body.action === "force-logout") {
+      const result = await forceLogoutAccount(user, body.username);
       return json({ ok: true, ...result });
     }
     if (body.action === "show-password") {

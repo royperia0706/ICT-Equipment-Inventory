@@ -54,7 +54,12 @@ export async function POST(request) {
 
   clearLock(username);
   const step = result.mustChangePassword ? "reset-password" : "verified";
-  const sessionId = await startUserSession(result.user.username);
+  let sessionId = "";
+  try {
+    sessionId = await startUserSession(result.user.username);
+  } catch (error) {
+    return json({ ok: false, error: error.message || "This account is already signed in on another computer." }, error.status || 409);
+  }
   await setSession({
     username: result.user.username,
     step,

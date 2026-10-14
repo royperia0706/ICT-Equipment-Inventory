@@ -45,6 +45,7 @@ function MenuIcon({ name }) {
     reset: "M12 6V3L7 8l5 5V10a5 5 0 1 1-5 5H5a7 7 0 1 0 7-9Z",
     deactivate: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-6 9a6 6 0 0 1 9.5-4.8L7.2 15.5A6 6 0 0 1 6 12Zm3.5 4.8 8.3-8.3A6 6 0 0 1 9.5 16.8Z",
     show: "M12 6c-5 0-8.5 4.2-9.5 6 1 1.8 4.5 6 9.5 6s8.5-4.2 9.5-6c-1-1.8-4.5-6-9.5-6Zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z",
+    logout: "M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4v-2H6V6h4V4Zm3.5 3.5 5.5 4.5-5.5 4.5V13H9v-2h4.5V7.5Z",
     approve: "M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z",
     reject: "M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3 1.4 1.4Z",
   };
@@ -55,7 +56,7 @@ function MenuIcon({ name }) {
   );
 }
 
-function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onShow, onDecide }) {
+function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onShow, onDecide, onForceLogout }) {
   const [open, setOpen] = useState(false);
   const [place, setPlace] = useState(null);
   const buttonRef = useRef(null);
@@ -84,8 +85,8 @@ function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onSho
     const below = window.innerHeight - rect.bottom;
     setPlace({
       right: Math.max(8, window.innerWidth - rect.right),
-      top: below < 220 ? rect.top - 8 : rect.bottom + 6,
-      upward: below < 220,
+      top: below < 320 ? rect.top - 8 : rect.bottom + 6,
+      upward: below < 320,
     });
     setOpen((current) => !current);
   }
@@ -125,6 +126,9 @@ function AccountMenu({ account, user, busy, onEdit, onReset, onDeactivate, onSho
               ) : null}
             </>
           )}
+          {account.login ? (
+            <button type="button" onClick={() => { setOpen(false); onForceLogout(account); }}><MenuIcon name="logout" />Force logout</button>
+          ) : null}
           {user.role === "super-admin" && account.pendingAction ? (
             <>
               <button type="button" onClick={() => { setOpen(false); onDecide(account, "approve"); }}><MenuIcon name="approve" />Approve</button>
@@ -325,6 +329,26 @@ export default function AccountsView({ accounts = [], user = null, locations = [
     return statusOptions.includes(account.status) ? account.status : "Active";
   }
 
+  function loggedInText(account) {
+    if (!account.login || !account.loggedInAt) return "—";
+    return new Date(account.loggedInAt).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Manila",
+    });
+  }
+
+  async function forceLogout(account) {
+    if (!window.confirm(`Force logout ${account.username}? They will be signed out of the system.`)) return;
+    const data = await accountAction(account, "force-logout");
+    if (!data) return;
+    setNotice(`${account.username} was signed out.`);
+  }
+
   async function accountAction(account, action) {
     setError("");
     setNotice("");
@@ -487,6 +511,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                     <th>Classification</th>
                     <th>Username</th>
                     <th>Access</th>
+                    <th>Logged In</th>
                     {manager ? <th className="action-col">Action</th> : null}
                   </tr>
                 </thead>
@@ -499,6 +524,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                       <td>{account.classification}</td>
                       <td>{account.username}</td>
                       <td>{account.access}</td>
+                      <td>{loggedInText(account)}</td>
                       {manager ? (
                         <td className="action-col">
                           <AccountMenu
@@ -509,6 +535,7 @@ export default function AccountsView({ accounts = [], user = null, locations = [
                             onReset={resetPassword}
                             onDeactivate={deactivate}
                             onShow={showPassword}
+                            onForceLogout={forceLogout}
                             onDecide={decide}
                           />
                         </td>

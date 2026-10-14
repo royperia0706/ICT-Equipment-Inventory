@@ -1,6 +1,6 @@
 import { idleExpired } from "@/lib/idle";
 import { clearSession, getSession, json, setSession } from "@/lib/session";
-import { endUserSession, getSessionUser } from "@/lib/users";
+import { endUserSession, getSessionUser, touchUserSession } from "@/lib/users";
 
 export async function POST() {
   const session = await getSession();
@@ -18,6 +18,11 @@ export async function POST() {
     return json({ ok: false }, 503);
   }
   if (!user) {
+    await clearSession();
+    return json({ ok: false }, 401);
+  }
+  const touched = await touchUserSession(session.username, session.sessionId).catch(() => false);
+  if (!touched) {
     await clearSession();
     return json({ ok: false }, 401);
   }
